@@ -20,8 +20,10 @@ jobs:
           node-version: 18
 
       - run: npm install
-      - name: Lint commits
-        run: npx commitlint --from=origin/main --to=HEAD
+        working-directory: sante-accessible
+
+      - run: npx commitlint --from=origin/main --to=HEAD
+        working-directory: sante-accessible
 
   build:
     runs-on: ubuntu-latest
@@ -35,5 +37,10 @@ jobs:
           node-version: 18
 
       - run: npm install
+        working-directory: sante-accessible
+
       - run: npm run lint
+        working-directory: sante-accessible
+
       - run: npm run build
+        working-directory: sante-accessible
