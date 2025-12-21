@@ -51,13 +51,13 @@ export default function HomePage() {
 
       {/* What is Services & Accès Section */}
       <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>Qu'est-ce que Services & Accès ?</h2>
+        <h2 className={styles.sectionTitle}>Qu&apos;est-ce que Services & Accès ?</h2>
         <div className={styles.content}>
           <p className={styles.paragraph}>
-            Services & Accès est une plateforme en ligne conçue pour faciliter l'accès aux informations essentielles sur les établissements hospitaliers. Elle permet aux utilisateurs de consulter rapidement la liste des hôpitaux, de visualiser en temps réel leur flux d'activité et d'anticiper ainsi les temps d'attente. Grâce à une interface claire, chacun peut identifier l'établissement le plus adapté à ses besoins et organiser son déplacement en toute sérénité.
+            Services & Accès est une plateforme en ligne conçue pour faciliter l&apos;accès aux informations essentielles sur les établissements hospitaliers. Elle permet aux utilisateurs de consulter rapidement la liste des hôpitaux, de visualiser en temps réel leur flux d&apos;activité et d&apos;anticiper ainsi les temps d&apos;attente. Grâce à une interface claire, chacun peut identifier l&apos;établissement le plus adapté à ses besoins et organiser son déplacement en toute sérénité.
           </p>
           <p className={styles.paragraph}>
-            Le site met également en avant les spécificités propres à chaque hôpital, comme les modalités de prise en charge, l'accessibilité pour les personnes à mobilité réduite ou encore les accès réservés aux services de secours. En centralisant ces données fiables et actualisées, Services & Accès devient un outil simple et indispensable pour rendre le parcours de soins plus fluide et mieux informé.
+            Le site met également en avant les spécificités propres à chaque hôpital, comme les modalités de prise en charge, l&apos;accessibilité pour les personnes à mobilité réduite ou encore les accès réservés aux services de secours. En centralisant ces données fiables et actualisées, Services & Accès devient un outil simple et indispensable pour rendre le parcours de soins plus fluide et mieux informé.
           </p>
           <button className={styles.primaryButton}>
             Accéder à la liste des hôpitaux
@@ -106,7 +106,7 @@ export default function HomePage() {
         </div>
         <div className={styles.callSection}>
           <p className={styles.callText}>
-            Services & Accès est conçu pour être accessible à tous, avec une interface simple et intuitive pour faciliter votre recherche d'informations hospitalières.
+            Services & Accès est conçu pour être accessible à tous, avec une interface simple et intuitive pour faciliter votre recherche d&apos;informations hospitalières.
           </p>
           <button className={styles.callButton}>
             <span className={styles.phoneIcon}>📞</span>
@@ -118,9 +118,30 @@ export default function HomePage() {
       {/* Footer Navigation */}
       <footer className={styles.footer}>
         <div className={styles.footerIcons}>
-          <span className={styles.footerIcon}>📍</span>
-          <span className={styles.footerIcon}>🏠</span>
-          <span className={styles.footerIcon}>🏥</span>
+          <Image 
+            src="/Localisation.svg"
+            alt="Localisation" 
+            width={24}
+            height={24}
+            className={styles.footerIcon}
+            unoptimized
+          />
+          <Image 
+            src="/accueil.svg"
+            alt="Accueil" 
+            width={24}
+            height={24}
+            className={styles.footerIcon}
+            unoptimized
+          />
+          <Image 
+            src="/Hopital.svg"
+            alt="Hôpital" 
+            width={24}
+            height={24}
+            className={styles.footerIcon}
+            unoptimized
+          />
         </div>
       </footer>
     </div>

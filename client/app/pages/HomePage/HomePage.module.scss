@@ -284,17 +284,19 @@
 }
 
 .footerIcon {
-  font-size: 1.5rem;
-  color: #ffffff;
+  width: 24px;
+  height: 24px;
   cursor: pointer;
   transition: transform 0.2s ease;
+  filter: brightness(0) invert(1); // Make SVG white
   
   &:hover {
     transform: scale(1.2);
   }
   
   @media (min-width: 768px) {
-    font-size: 1.75rem;
+    width: 28px;
+    height: 28px;
   }
 }
 
