@@ -4,11 +4,11 @@ import FAQItem from './components/FAQItems'
 export default function Home() {
   return (
     <main className="bg-white">
-      <section className="relative">
+      <section className="relative min-h-[130px] md:min-h-[250px] lg:min-h-[500px] shadow-[0_4px_4px_rgba(0,0,0,0.25)]" aria-label="En-tête de la page">
         <div className="absolute top-0 left-0 w-full h-full">
           <Image 
             src="/images/home/hero-banner.webp" 
-            alt="Hero Banner" 
+            alt="Vue d'un service d'urgences hospitalier moderne et accueillant" 
             objectFit="cover"
             fill={true}
             preload={true}
@@ -16,14 +16,14 @@ export default function Home() {
             blurDataURL='/images/home/hero-banner.webp'
             loading="eager"
           />
-          <div className="absolute inset-0 bg-black/40 z-10"></div>
+          <div className="absolute inset-0 bg-black/40 z-10" aria-hidden="true"></div>
         </div>
         <div className="relative z-10 flex flex-row justify-around items-center gap-4 pt-4 px-4 w-full">
           <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold text-white text-left">Services & Accès</h1>
           <div>
             <Image 
               src="/images/home/doctor.webp" 
-              alt="Doctor"
+              alt="Professionnel de santé souriant prêt à accueillir les patients"
               width={2000}
               height={2000}
               quality={100}
@@ -35,8 +35,8 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <section className="pt-6 px-4 flex flex-col gap-4 items-center">
-        <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full">Qu’est-ce que Services & Accès ?</h2>
+      <section id="main-content" className="pt-6 px-4 flex flex-col gap-4 items-center" aria-labelledby="about-heading">
+        <h2 id="about-heading" className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full">Qu'est-ce que Services & Accès ?</h2>
         <div className="text-sm md:text-base lg:text-lg text-left flex flex-col gap-4 w-full">
           <p>
             Services & Accès est une plateforme en ligne conçue pour faciliter l’accès aux informations essentielles sur les établissements hospitaliers. Elle permet aux utilisateurs de consulter rapidement la liste des hôpitaux, de visualiser en temps réel leur flux d’activité et d’anticiper ainsi les temps d’attente. Grâce à une interface claire, chacun peut identifier l’établissement le plus adapté à ses besoins et organiser son déplacement en toute sérénité.
@@ -48,22 +48,24 @@ export default function Home() {
         <button 
           className="bg-primary text-white px-4 py-2 rounded-2xl font-bold w-fit" 
           type="button"
+          aria-label="Accéder à la liste complète des hôpitaux disponibles"
         >
           Accéder à la liste des hôpitaux
         </button>
       </section>
-      <section className='pt-6 px-4 flex flex-col gap-4 items-center'>
-        <h2 className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Passer par la carte</h2>
+      <section className='pt-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="map-heading">
+        <h2 id="map-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Passer par la carte</h2>
         <div></div>
         <button 
           className='bg-primary text-white px-4 py-2 rounded-2xl font-bold w-fit' 
           type="button"
+          aria-label="Accéder à la carte interactive des hôpitaux"
         >
           Accéder à la carte
         </button>
       </section>
-      <section className="pt-6 px-4 flex flex-col gap-4 items-center">
-        <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full uppercase">F.A.Q.</h2>
+      <section className="pt-6 px-4 flex flex-col gap-4 items-center" aria-labelledby="faq-heading">
+        <h2 id="faq-heading" className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full uppercase">Foire aux questions</h2>
         <div className="space-y-4 w-full">
           <FAQItem 
             question="Comment trouver un hôpital sur Services & Accès ?"
