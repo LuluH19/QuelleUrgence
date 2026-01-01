@@ -1,24 +1,3 @@
-git clone <repository-url>
-git checkout dev
-git pull origin dev
-git checkout -b feature/ma-fonctionnalite
-git add .
-git commit -m "feat: ajouter ma fonctionnalité"
-git push origin feature/ma-fonctionnalite
-git checkout dev
-git merge feature/ma-fonctionnalite
-git push origin dev
-git checkout main
-git merge dev
-git push origin main  # Déclenche le déploiement automatique
-git commit -m "feat: ajouter la fonctionnalité de connexion"
-git commit -m "fix(client): corriger le bug de chargement"
-git commit -m "docs: mettre à jour le README"
-git commit -m "refactor: réorganiser le code d'authentification"
-git commit -m "feat(auth): ajouter l'authentification OAuth
-git commit -m "ajouter fonctionnalité"  # Manque le type
-git commit -m "Fix bug"  # Type en majuscule
-git commit -m "feat: Ajouter fonctionnalité"  # Sujet en majuscule
 # Urgences
 
 Ce dépôt contient l'interface cliente d'une application dédiée aux informations et à la gestion des flux d'urgences hospitalières.
