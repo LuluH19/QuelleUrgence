@@ -36,13 +36,13 @@ export default function Home() {
         </div>
       </section>
       <section id="main-content" className="pt-6 px-4 flex flex-col gap-4 items-center" aria-labelledby="about-heading">
-        <h2 id="about-heading" className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full">Qu'est-ce que Services & Accès ?</h2>
+        <h2 id="about-heading" className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full">Qu&apos;est-ce que Services & Accès ?</h2>
         <div className="text-sm md:text-base lg:text-lg text-left flex flex-col gap-4 w-full">
           <p>
-            Services & Accès est une plateforme en ligne conçue pour faciliter l’accès aux informations essentielles sur les établissements hospitaliers. Elle permet aux utilisateurs de consulter rapidement la liste des hôpitaux, de visualiser en temps réel leur flux d’activité et d’anticiper ainsi les temps d’attente. Grâce à une interface claire, chacun peut identifier l’établissement le plus adapté à ses besoins et organiser son déplacement en toute sérénité.
+            Services & Accès est une plateforme en ligne conçue pour faciliter l&apos;accès aux informations essentielles sur les établissements hospitaliers. Elle permet aux utilisateurs de consulter rapidement la liste des hôpitaux, de visualiser en temps réel leur flux d&apos;activité et d&apos;anticiper ainsi les temps d&apos;attente. Grâce à une interface claire, chacun peut identifier l&apos;établissement le plus adapté à ses besoins et organiser son déplacement en toute sérénité.
           </p>
           <p>
-            Le site met également en avant les spécificités propres à chaque hôpital, comme les modalités de prise en charge, l’accessibilité pour les personnes à mobilité réduite ou encore les accès réservés aux services de secours. En centralisant ces données fiables et actualisées, Services & Accès devient un outil simple et indispensable pour rendre le parcours de soins plus fluide et mieux informé.
+            Le site met également en avant les spécificités propres à chaque hôpital, comme les modalités de prise en charge, l&apos;accessibilité pour les personnes à mobilité réduite ou encore les accès réservés aux services de secours. En centralisant ces données fiables et actualisées, Services & Accès devient un outil simple et indispensable pour rendre le parcours de soins plus fluide et mieux informé.
           </p>
         </div>
         <button 
@@ -69,17 +69,17 @@ export default function Home() {
         <div className="space-y-4 w-full">
           <FAQItem 
             question="Comment trouver un hôpital sur Services & Accès ?"
-            answer="Il suffit d'utiliser le moteur de recherche ou la carte interactive du site pour accéder rapidement à la liste des hôpitaux disponibles dans votre zone géographique."
+            answer="Il suffit d&apos;utiliser le moteur de recherche ou la carte interactive du site pour accéder rapidement à la liste des hôpitaux disponibles dans votre zone géographique."
           />
           
           <FAQItem 
             question="Les informations sur le flux des hôpitaux sont-elles mises à jour en temps réel ?"
-            answer="Oui, le site affiche le flux d'activité de chaque hôpital en temps réel afin d'aider les utilisateurs à estimer les temps d'attente et choisir l'établissement le plus adapté."
+            answer="Oui, le site affiche le flux d&apos;activité de chaque hôpital en temps réel afin d&apos;aider les utilisateurs à estimer les temps d&apos;attente et choisir l&apos;établissement le plus adapté."
           />
           
           <FAQItem 
             question="Puis-je consulter les spécificités de chaque hôpital ?"
-            answer="Oui, chaque fiche d'établissement indique les services de prise en charge, l'accessibilité pour les personnes en situation de handicap, ainsi que les accès pompiers et autres dispositifs essentiels."
+            answer="Oui, chaque fiche d&apos;établissement indique les services de prise en charge, l&apos;accessibilité pour les personnes en situation de handicap, ainsi que les accès pompiers et autres dispositifs essentiels."
           />
           
           <FAQItem 
