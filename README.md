@@ -1,161 +1,235 @@
 # Urgences
 
-Ce dépôt contient l'interface cliente d'une application dédiée aux informations et à la gestion des flux d'urgences hospitalières.
+Application web pour la gestion des urgences.
 
-## Sommaire
+## 📋 Table des matières
 
-- Installation
-- Structure du projet
-- Branches Git et workflow
-- Développement (scripts utiles)
-- CI / Déploiement
-- Conventions de commit
-- Contribution
+- [Installation](#installation)
+- [Structure du projet](#structure-du-projet)
+- [Branches Git](#branches-git)
+- [Développement](#développement)
+- [CI/CD](#cicd)
+- [Conventional Commits](#conventional-commits)
+- [Déploiement](#déploiement)
+- [Contribution](#contribution)
 
 ## Installation
 
-1. Clonez le dépôt et installez les dépendances du client :
-
 ```bash
+# Cloner le dépôt
 git clone <repository-url>
-cd Urgences/client
+cd Urgences
+
+# Installer les dépendances du client
+cd client
 npm install
-```
-
-2. Pendant le développement, démarrez l'application côté client :
-
-```bash
-npm run dev
 ```
 
 ## Structure du projet
 
-Arborescence principale :
-
 ```
 Urgences/
-├── client/                # Application frontend (Next.js)
-├── .github/workflows/     # Actions GitHub (CI, déploiement)
-├── .commitlintrc.json     # Règles Conventional Commits
-└── README.md              # Documentation du projet
+├── client/              # Application frontend
+├── .github/
+│   └── workflows/      # Workflows CI/CD
+│       ├── ci.yml       # Pipeline CI
+│       └── deploy-vercel.yml  # Déploiement Vercel
+├── .commitlintrc.json  # Configuration Conventional Commits
+└── README.md
 ```
 
-## Branches Git et workflow
+## Branches Git
 
-Le projet utilise une branche de développement et une branche de production :
+Le projet utilise deux branches principales :
 
-- `dev` : branche principale de développement. C'est ici que sont intégrées les nouvelles fonctionnalités et corrections après revue.
-- `main` : branche de production. Les mises en production doivent provenir d'un merge depuis `dev`.
+### `dev` - Branche de développement
+- **Usage** : Tous les développements et modifications de code
+- **Workflow** : C'est sur cette branche que vous codez et testez vos fonctionnalités
+- **CI** : Le pipeline CI s'exécute automatiquement sur chaque push
 
-Workflow recommandé :
+### `main` - Branche de production
+- **Usage** : Uniquement pour le déploiement sur Vercel
+- **Workflow** : Mergez `dev` dans `main` uniquement quand le code est prêt pour la production
+- **Déploiement** : Déploiement automatique sur Vercel à chaque push
+
+### Workflow recommandé
 
 ```bash
+# 1. Travailler sur la branche dev
 git checkout dev
 git pull origin dev
+
+# 2. Créer une nouvelle branche de fonctionnalité
 git checkout -b feature/ma-fonctionnalite
-# faire les modifications
+
+# 3. Faire vos modifications et commits
 git add .
-git commit -m "feat(scope): description courte"
+git commit -m "feat: ajouter ma fonctionnalité"
+
+# 4. Pousser et créer une Pull Request vers dev
 git push origin feature/ma-fonctionnalite
-# ouvrir une Pull Request vers dev
+
+# 5. Après validation, merger dans dev
+git checkout dev
+git merge feature/ma-fonctionnalite
+git push origin dev
+
+# 6. Quand prêt pour la production, merger dev dans main
+git checkout main
+git merge dev
+git push origin main  # Déclenche le déploiement automatique
 ```
 
-Après validation et tests, mergez la PR dans `dev`. Une fois prêt pour la production, mergez `dev` dans `main`.
+## Développement
 
-## Développement (scripts)
+### Scripts disponibles
 
-Dans le dossier `client/`, les scripts les plus utiles :
+Dans le dossier `client/` :
 
 ```bash
-# démarrer le serveur de développement
+# Démarrer le serveur de développement
 npm run dev
 
-# lancer ESLint sur le projet
+# Linter le code
 npm run lint
 
-# vérifier les types TypeScript
+# Vérifier les types TypeScript
 npm run typecheck
 
-# builder pour la production
+# Build de production
 npm run build
 
-# prévisualiser le build de production
+# Prévisualiser le build de production
 npm run preview
 ```
 
-## CI / Déploiement
+## CI/CD
 
-Le pipeline CI (GitHub Actions) s'exécute sur les pushes et les PRs ciblant `dev` et `main`. Il inclut notamment :
+Le projet utilise GitHub Actions pour l'intégration et le déploiement continus.
 
-- vérification du format des messages de commit (Conventional Commits),
-- linting du code (ESLint),
-- vérification des types TypeScript,
-- scans de sécurité npm,
-- build.
+### Pipeline CI (`.github/workflows/ci.yml`)
 
-Le déploiement vers l'environnement de production est automatisé depuis la branche `main` (via Vercel dans la configuration actuelle).
+Le pipeline CI s'exécute automatiquement sur :
+- Push sur les branches `dev` et `main`
+- Pull Requests vers `dev` et `main`
 
-## Conventions de commit
+#### Étapes du pipeline :
 
-Nous utilisons le format Conventional Commits. Exemples valides :
+1. **Lint Commits** : Vérifie que les messages de commit respectent le format Conventional Commits
+2. **Lint Code** : Exécute ESLint pour vérifier la qualité du code
+3. **Type Check** : Vérifie les types TypeScript
+4. **Security Scan** : Audit de sécurité npm (détecte les vulnérabilités CRITICAL et HIGH)
+5. **Build** : Compile l'application avec Vite
 
-```bash
-git commit -m "feat(auth): ajouter l'authentification OAuth"
-git commit -m "fix(client): corriger le bug d'affichage"
-git commit -m "docs: mise à jour du README"
+Toutes ces étapes doivent réussir pour que le pipeline soit validé.
+
+### Pipeline de déploiement (`.github/workflows/deploy-vercel.yml`)
+
+Le déploiement s'exécute automatiquement uniquement sur la branche `main` :
+- Build de production
+- Déploiement sur Vercel
+
+## Conventional Commits
+
+Le projet utilise le format [Conventional Commits](https://www.conventionalcommits.org/) pour standardiser les messages de commit.
+
+### Format
+
+```
+<type>(<scope>): <subject>
+
+[body optionnel]
+
+[footer optionnel]
 ```
 
-Messages invalides :
+### Types autorisés
+
+- `feat` : Nouvelle fonctionnalité
+- `fix` : Correction de bug
+- `docs` : Documentation
+- `style` : Formatage, point-virgules manquants, etc. (pas de changement de code)
+- `refactor` : Refactoring du code
+- `perf` : Amélioration des performances
+- `test` : Ajout ou modification de tests
+- `build` : Changements du système de build
+- `ci` : Changements de configuration CI
+- `chore` : Tâches de maintenance
+- `revert` : Annulation d'un commit précédent
+
+### Exemples en ligne de commande par terminal
 
 ```bash
-git commit -m "ajouter fonctionnalité"    # manque le type
-git commit -m "Fix bug"                   # type en majuscule
+# ✅ Valides
+git commit -m "feat: ajouter la fonctionnalité de connexion"
+git commit -m "fix(client): corriger le bug de chargement"
+git commit -m "docs: mettre à jour le README"
+git commit -m "refactor: réorganiser le code d'authentification"
+git commit -m "feat(auth): ajouter l'authentification OAuth
+
+Implémente l'authentification via Google et GitHub"
+
+# ❌ Invalides
+git commit -m "ajouter fonctionnalité"  # Manque le type
+git commit -m "Fix bug"  # Type en majuscule
+git commit -m "feat: Ajouter fonctionnalité"  # Sujet en majuscule
 ```
 
-Le pipeline CI peut refuser une PR si les commits ne respectent pas ces règles.
-
-## Contribution
-
-1. Travaillez depuis `dev` et créez une branche de fonctionnalité :
-
-```bash
-git checkout dev
-git pull origin dev
-git checkout -b feature/ma-fonctionnalite
-```
-
-2. Respectez les conventions suivantes :
-
-- utilisez Conventional Commits pour les messages,
-- assurez-vous que le code passe `npm run lint` et `npm run typecheck`,
-- ajoutez des tests si applicable.
-
-3. Poussez la branche et ouvrez une Pull Request vers `dev`.
-
-4. Attendez la validation du pipeline CI et des relectures avant de merger.
+Le workflow CI vérifie automatiquement le format des commits et bloque le merge si le format n'est pas respecté.
 
 ## Déploiement
 
-Le déploiement automatique est déclenché depuis la branche `main` (configuration Vercel). Pour un déploiement manuel :
+### Déploiement automatique
+
+Le déploiement sur Vercel se fait automatiquement à chaque push sur la branche `main`.
+
+### Déploiement manuel
 
 ```bash
-# installer l'interface en ligne de commande Vercel
+# Installer Vercel CLI globalement
 npm install -g vercel
 
-# se connecter
+# Se connecter à Vercel
 vercel login
 
-# déployer en production
+# Déployer
 vercel --prod
 ```
 
-## Remarques
+## Contribution
 
-- Ne poussez pas directement sur `main`. Passez toujours par `dev` et une PR.
-- Assurez-vous que le pipeline CI est vert avant de demander le merge.
+1. Créer une branche depuis `dev`
+   ```bash
+   git checkout dev
+   git pull origin dev
+   git checkout -b feature/ma-fonctionnalite
+   ```
 
-## Liens utiles
+2. Faire les modifications en respectant les conventions commmit :
+   - Format Conventional Commits pour les messages
+   - Code linté et sans erreurs TypeScript
+   - Tests passants
 
-- Conventional Commits : https://www.conventionalcommits.org/
-- Vercel : https://vercel.com/docs
-- GitHub Actions : https://docs.github.com/actions
+3. Pousser et créer une Pull Request vers `dev`
+   ```bash
+   git push origin feature/ma-fonctionnalite
+   ```
+
+4. Attendre la validation du pipeline CI
+
+5. Après review et validation, la PR sera mergée dans `dev`
+
+6. Pour déployer en production, créer une PR de `dev` vers `main`
+
+## 📝 Notes
+
+- Le pipeline CI doit passer avant tout merge
+- Les commits doivent respecter le format Conventional Commits
+- Ne jamais push directement sur `main` sans passer par `dev`
+- Le déploiement sur Vercel se fait uniquement depuis `main`
+
+## 🔗 Liens utiles
+
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Vercel Documentation](https://vercel.com/docs)
+- [GitHub Actions](https://docs.github.com/en/actions)
