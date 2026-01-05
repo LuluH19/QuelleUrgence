@@ -2,21 +2,22 @@
 
 import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
+import type { Map as LeafletMap } from 'leaflet'
 
-// Composant de la carte (chargé côté client uniquement)
 function MapContent() {
-  const mapRef = useRef<HTMLDivElement>(null)
-  const mapInstanceRef = useRef<any>(null)
+  const mapRef = useRef<HTMLDivElement | null>(null)
+  const mapInstanceRef = useRef<LeafletMap | null>(null)
 
 useEffect(() => {
   if (typeof window === 'undefined' || !mapRef.current) return
+
+  const container = mapRef.current 
 
   const initMap = async () => {
     if (mapInstanceRef.current) return
 
     const L = (await import('leaflet')).default
 
-    // Fix icons
     delete (L.Icon.Default.prototype as any)._getIconUrl
     L.Icon.Default.mergeOptions({
       iconRetinaUrl:
@@ -27,10 +28,9 @@ useEffect(() => {
         'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
     })
 
-    // 🔑 IMPORTANT: reset Leaflet container
-    ;(mapRef.current as any)._leaflet_id = null
+    ;(container as any)._leaflet_id = null
 
-    const map = L.map(mapRef.current).setView([48.8566, 2.3522], 12)
+    const map = L.map(container).setView([48.8566, 2.3522], 12)
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors',
@@ -52,14 +52,13 @@ useEffect(() => {
 
   return (
     <>
-      <link 
-        rel="stylesheet" 
+      <link
+        rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
         crossOrigin=""
       />
-      <div 
-        ref={mapRef} 
+      <div
+        ref={mapRef}
         className="w-full h-[300px] md:h-[400px] lg:h-[500px] rounded-lg border-2 border-gray-300 shadow-md"
         aria-label="Carte interactive des hôpitaux"
       />
@@ -67,7 +66,6 @@ useEffect(() => {
   )
 }
 
-// Export avec chargement dynamique (SSR désactivé)
 const MapComponent = dynamic(() => Promise.resolve(MapContent), {
   ssr: false,
   loading: () => (
