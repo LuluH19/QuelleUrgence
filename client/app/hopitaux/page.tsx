@@ -90,7 +90,6 @@ const HospitalCard: FC<{ hospital: Hospital }> = memo(({ hospital }) => {
             alt=""
             width={20} 
             height={20}  
-            quality={100}
             aria-hidden="true"
           />
           <span className="text-white font-bold underline">{hospital.fields.phone}</span>
