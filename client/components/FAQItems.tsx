@@ -2,7 +2,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
     return (
       <details className="group">
         <summary 
-          className="flex justify-between items-center cursor-pointer p-2 text-sm md:text-lg lg:text-xl font-bold text-white outline-none list-none bg-primary rounded-lg focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+          className="flex justify-between items-center cursor-pointer p-2 text-sm md:text-lg lg:text-xl font-bold text-white outline-none list-none bg-primary rounded-lg focus:ring-4 focus:ring-red-600"
           aria-label={`Question : ${question}`}
         >
           {question}
