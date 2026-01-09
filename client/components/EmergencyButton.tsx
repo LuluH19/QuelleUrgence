@@ -2,7 +2,7 @@ export default function EmergencyButton() {
   return (
     <a
       href="tel:114"
-      className="fixed bottom-24 md:bottom-6 right-6 bg-primary text-white font-bold p-2.5 rounded-lg shadow-lg transition-all duration-200 hover:scale-110 z-40 flex items-center gap-2 border-[3px] border-black focus:outline-none focus:ring-4 focus:ring-red-600"
+      className="fixed bottom-24 md:bottom-6 right-6 bg-primary text-white font-bold p-2.5 rounded-lg shadow-lg transition-all duration-200 hover:scale-110 z-[9999] flex items-center gap-2 border-[3px] border-black focus:outline-none focus:ring-4 focus:ring-red-600"
       aria-label="Appeler le numéro d'urgence 114"
     >
       <svg 

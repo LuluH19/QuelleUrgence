@@ -13,7 +13,7 @@ export default function Header() {
   const isHovered = (path: string) => hoveredLink === path
 
   return (
-    <header className="fixed bottom-0 left-0 right-0 md:top-0 md:left-0 md:bottom-0 md:right-auto bg-white shadow-lg z-50 md:w-64">
+    <header className="fixed bottom-0 left-0 right-0 md:top-0 md:left-0 md:bottom-0 md:right-auto bg-white shadow-lg z-[9999] md:w-64">
       <nav className="h-full">
         <ul className="flex md:flex-col justify-around md:justify-start items-center h-full md:py-8 py-3 gap-2 md:gap-6">
             <li className="w-full flex md:block items-center justify-center">
