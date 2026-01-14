@@ -29,7 +29,7 @@ export default function Header() {
                 >
                     <Image 
                         src={(isActive('/') || isHovered('/')) ? "/images/icons/home-white.svg" : "/images/icons/home-black.svg"}
-                        alt="Icone d'accueil" 
+                        alt="" 
                         width={100} 
                         height={100} 
                         className="w-10 h-10"
@@ -54,7 +54,7 @@ export default function Header() {
                 >
                     <Image 
                         src={(isActive('/map') || isHovered('/map')) ? "/images/icons/map-white.svg" : "/images/icons/map-black.svg"}
-                        alt="Icone de carte" 
+                        alt="" 
                         width={100} 
                         height={100} 
                         className="w-10 h-10"
@@ -79,7 +79,7 @@ export default function Header() {
                 >
                     <Image 
                         src={(isActive('/hopitaux') || isHovered('/hopitaux')) ? "/images/icons/hospital-white.svg" : "/images/icons/hospital-black.svg"}
-                        alt="Icone d'un hôpital" 
+                        alt="" 
                         width={100} 
                         height={100} 
                         className="w-10 h-10"
