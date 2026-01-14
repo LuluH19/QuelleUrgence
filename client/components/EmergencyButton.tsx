@@ -1,6 +1,8 @@
+import Link from 'next/link'
+
 export default function EmergencyButton() {
   return (
-    <a
+    <Link
       href="tel:114"
       className="fixed bottom-24 md:bottom-6 right-6 bg-primary text-white font-bold p-2.5 rounded-lg shadow-lg transition-all duration-200 hover:scale-110 z-[9999] flex items-center gap-2 border-[3px] border-black focus:outline-none focus:ring-4 focus:ring-red-600"
       aria-label="Appeler le numéro d'urgence 114"
@@ -21,7 +23,7 @@ export default function EmergencyButton() {
       </svg>
       <span className="hidden sm:inline">Appeler le 114</span>
       <span className="sm:hidden">114</span>
-    </a>
+    </Link>
   )
 }
 
