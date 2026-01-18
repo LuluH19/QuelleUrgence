@@ -144,6 +144,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
               <p className="text-rose-700 font-medium">⚠️ {error || 'Hôpital non trouvé'}</p>
             </div>
             <Link 
+              aria-label="Retour à la liste des hôpitaux"
               href="/hopitaux" 
               className="mt-4 inline-flex items-center gap-2 text-primary font-bold hover:underline focus:outline-none focus:ring-4 focus:ring-red-600 rounded px-2 py-1"
             >

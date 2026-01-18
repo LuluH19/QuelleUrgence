@@ -12,7 +12,7 @@ function FAQItem({ question, answer }: { question: string; answer: string }) {
             </svg>
           </span>
         </summary>
-        <div className="bg-white px-4 pt-3 pb-6 text-black" role="region" aria-label="Réponse">
+        <div className="mt-2 bg-white px-4 pt-3 pb-6 text-black" role="region" aria-label="Réponse">
           <p>{answer}</p>
         </div>
       </details>

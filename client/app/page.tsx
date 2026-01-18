@@ -24,7 +24,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/40 z-10" aria-hidden="true"></div>
         </div>
         <div className="relative z-10 flex flex-row justify-around items-center gap-4 pt-4 px-4 w-full">
-          <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold text-white text-left">Services & Accès</h1>
+          <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold text-white text-left">Quelles Urgences</h1>
           <div>
             <Image 
               src="/images/home/doctor.webp" 
@@ -41,13 +41,13 @@ export default function Home() {
         </div>
       </section>
       <section id="main-content" className="pt-6 px-4 flex flex-col gap-4 items-center" aria-labelledby="about-heading">
-        <h2 id="about-heading" className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full">Qu&apos;est-ce que Services & Accès ?</h2>
+        <h2 id="about-heading" className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full">Qu&apos;est-ce que Quelles Urgences ?</h2>
         <div className="text-sm md:text-base lg:text-lg text-left flex flex-col gap-4 w-full">
           <p>
-            Services & Accès est une plateforme en ligne conçue pour faciliter l&apos;accès aux informations essentielles sur les établissements hospitaliers. Elle permet aux utilisateurs de consulter rapidement la liste des hôpitaux, de visualiser en temps réel leur flux d&apos;activité et d&apos;anticiper ainsi les temps d&apos;attente. Grâce à une interface claire, chacun peut identifier l&apos;établissement le plus adapté à ses besoins et organiser son déplacement en toute sérénité.
+            Quelles Urgences est une plateforme en ligne conçue pour faciliter l&apos;accès aux informations essentielles sur les établissements hospitaliers. Elle permet aux utilisateurs de consulter rapidement la liste des hôpitaux, de visualiser en temps réel leur flux d&apos;activité et d&apos;anticiper ainsi les temps d&apos;attente. Grâce à une interface claire, chacun peut identifier l&apos;établissement le plus adapté à ses besoins et organiser son déplacement en toute sérénité.
           </p>
           <p>
-            Le site met également en avant les spécificités propres à chaque hôpital, comme les modalités de prise en charge, l&apos;accessibilité pour les personnes à mobilité réduite ou encore les accès réservés aux services de secours. En centralisant ces données fiables et actualisées, Services & Accès devient un outil simple et indispensable pour rendre le parcours de soins plus fluide et mieux informé.
+            Le site met également en avant les spécificités propres à chaque hôpital, comme les modalités de prise en charge, l&apos;accessibilité pour les personnes à mobilité réduite ou encore les accès réservés aux services de secours. En centralisant ces données fiables et actualisées, Quelles Urgences devient un outil simple et indispensable pour rendre le parcours de soins plus fluide et mieux informé.
           </p>
         </div>
         <Link 
@@ -69,11 +69,11 @@ export default function Home() {
           Accéder à la carte
         </button>
       </section>
-      <section className="pt-6 px-4 flex flex-col gap-4 items-center" aria-labelledby="faq-heading">
+      <section className="pt-6 pb-20 px-4 flex flex-col gap-4 items-center" aria-labelledby="faq-heading">
         <h2 id="faq-heading" className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full uppercase">F.A.Q</h2>
         <div className="space-y-4 w-full">
           <FAQItem 
-            question="Comment trouver un hôpital sur Services & Accès ?"
+            question="Comment trouver un hôpital sur Quelles Urgences ?"
             answer="Il suffit d&apos;utiliser le moteur de recherche ou la carte interactive du site pour accéder rapidement à la liste des hôpitaux disponibles dans votre zone géographique."
           />
           
@@ -89,7 +89,7 @@ export default function Home() {
           
           <FAQItem 
             question="Le site est-il accessible aux personnes ayant des besoins spécifiques ?"
-            answer="Services & Accès est conçu pour être accessible à tous, avec une interface simple, claire et compatible avec les principaux outils d'assistance."
+            answer="Quelles Urgences est conçu pour être accessible à tous, avec une interface simple, claire et compatible avec les principaux outils d'assistance."
           />
         </div>
       </section>
