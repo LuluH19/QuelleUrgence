@@ -3,7 +3,7 @@ import Image from "next/image";
 function Specification({ fullWidth, imagePath, description }: { fullWidth: boolean; imagePath: string; description: string }) {
     return (
         <div 
-        className={`rounded-lg bg-primary text-white p-6 shadow-md flex flex-col gap-4 items-center justify-center ${fullWidth ? 'col-span-full' : ''}`}
+        className={`rounded-lg bg-primary text-white p-6 shadow-md flex flex-col gap-4 items-center justify-start ${fullWidth ? 'col-span-full' : ''}`}
         aria-label={description}
         >
             <Image
@@ -16,7 +16,7 @@ function Specification({ fullWidth, imagePath, description }: { fullWidth: boole
                 blurDataURL={imagePath}
                 loading="lazy"
             />
-            <p className="text-sm md:text-base lg:text-lg font-bold">
+            <p className="text-sm md:text-base lg:text-lg font-bold text-center">
                 {description}
             </p>
         </div>

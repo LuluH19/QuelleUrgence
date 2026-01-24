@@ -38,11 +38,32 @@ interface AccessibilityOptions {
   wheelchairAccessibleSeating?: boolean;
 }
 
+interface Professionnal {
+  internist: boolean;
+  pmr: boolean;
+  rheumatologist: boolean;
+  cardiologist: boolean;
+  pulmonologist: boolean;
+  nephrologist: boolean;
+  gasteroenterologist: boolean;
+  endocrinologist: boolean;
+  dermatologist: boolean;
+  ent: boolean;
+  gynecologist: boolean;
+  urologist: boolean;
+  orthopedist: boolean;
+  psychologist: boolean;
+  neurosurgeon: boolean;
+  pediatric_surgeon: boolean;
+  orthopedic_surgeon: boolean;
+}
+
 interface MockHospitalData {
   name: string;
   place_id: string;
   fire_fighter: boolean;
   social_worker: boolean;
+  professionnal: Professionnal;
 }
 
 export default function HospitalDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -362,6 +383,105 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
             </div>
           )}
         </section>
+
+        {mockData?.professionnal && (
+          <section className='py-6 px-4 flex flex-col gap-4' aria-labelledby="specializations-heading">
+            <h2 id="specializations-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Spécialisations médicales</h2>
+            
+            {specificationsLoading ? (
+              <div className="flex items-center gap-2 text-slate-500" role="status" aria-live="polite">
+                <div className="w-4 h-4 border-2 border-slate-300 border-t-primary rounded-full animate-spin" aria-hidden="true"></div>
+                <span>Chargement des spécialisations...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {(() => {
+                  const specializations = [
+                    mockData.professionnal.internist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Médecine interne"
+                    },
+                    mockData.professionnal.pmr && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Médecine physique et réadaptation"
+                    },
+                    mockData.professionnal.rheumatologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Rhumatologie"
+                    },
+                    mockData.professionnal.cardiologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Cardiologie"
+                    },
+                    mockData.professionnal.pulmonologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Pneumologie"
+                    },
+                    mockData.professionnal.nephrologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Néphrologie"
+                    },
+                    mockData.professionnal.gasteroenterologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Gastro-entérologie"
+                    },
+                    mockData.professionnal.endocrinologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Endocrinologie"
+                    },
+                    mockData.professionnal.dermatologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Dermatologie"
+                    },
+                    mockData.professionnal.ent && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "ORL (Oto-rhino-laryngologie)"
+                    },
+                    mockData.professionnal.gynecologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Gynécologie"
+                    },
+                    mockData.professionnal.urologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Urologie"
+                    },
+                    mockData.professionnal.orthopedist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Orthopédie"
+                    },
+                    mockData.professionnal.psychologist && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Psychologie"
+                    },
+                    mockData.professionnal.neurosurgeon && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Neurochirurgie"
+                    },
+                    mockData.professionnal.pediatric_surgeon && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Chirurgie pédiatrique"
+                    },
+                    mockData.professionnal.orthopedic_surgeon && {
+                      imagePath: "/images/logo/logo.svg",
+                      description: "Chirurgie orthopédique"
+                    }
+                  ].filter(Boolean) as { imagePath: string; description: string }[];
+
+                  const isOdd = specializations.length % 4 !== 0;
+
+                  return specializations.map((spec, index) => (
+                    <Specification
+                      key={spec.description}
+                      fullWidth={isOdd && index === specializations.length - 1}
+                      imagePath={spec.imagePath}
+                      description={spec.description}
+                    />
+                  ));
+                })()}
+              </div>
+            )}
+          </section>
+        )}
       </main>
     </>
   );
