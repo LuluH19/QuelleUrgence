@@ -7,6 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import MapWrapper from '@/components/MapWrapper';
 import Attendance from '@/components/Attendance';
+import Specification from '@/components/Specification';
 
 interface HospitalDetails {
   recordid: string;
@@ -54,7 +55,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [mockData, setMockData] = useState<MockHospitalData | null>(null);
   const [accessibilityOptions, setAccessibilityOptions] = useState<AccessibilityOptions | null>(null);
-  const [characteristicsLoading, setCharacteristicsLoading] = useState(true);
+  const [specificationsLoading, setspecificationsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
@@ -139,7 +140,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
     if (!hospital) return;
 
     async function fetchCharacteristics() {
-      setCharacteristicsLoading(true);
+      setspecificationsLoading(true);
       
       try {
         const mockRes = await fetch(`/api/hospitals/mock/search?name=${encodeURIComponent(hospital!.fields.name)}`);
@@ -157,7 +158,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
       } catch (error) {
         console.error('Erreur lors de la récupération des caractéristiques:', error);
       } finally {
-        setCharacteristicsLoading(false);
+        setspecificationsLoading(false);
       }
     }
 
@@ -257,144 +258,6 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           </button>
         </section>
 
-        <section className='py-6 px-4 flex flex-col gap-4' aria-labelledby="characteristics-heading">
-          <h2 id="characteristics-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Caractéristiques</h2>
-          
-          {characteristicsLoading ? (
-            <div className="flex items-center gap-2 text-slate-500" role="status" aria-live="polite">
-              <div className="w-4 h-4 border-2 border-slate-300 border-t-primary rounded-full animate-spin" aria-hidden="true"></div>
-              <span>Chargement des caractéristiques...</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mockData && (
-                <div className="bg-slate-50 rounded-lg p-4">
-                  <h3 className="font-bold text-primary mb-3 flex items-center gap-2">
-                    <span aria-hidden="true">🏥</span>
-                    Services spéciaux
-                  </h3>
-                  <ul className="space-y-2" role="list">
-                    <li className="flex items-center gap-2">
-                      <span 
-                        className={`w-5 h-5 flex items-center justify-center rounded-full ${mockData.fire_fighter ? 'bg-green-500' : 'bg-gray-300'}`}
-                        aria-hidden="true"
-                      >
-                        {mockData.fire_fighter ? '✓' : '✗'}
-                      </span>
-                      <span className={mockData.fire_fighter ? 'text-black' : 'text-gray-500'}>
-                        Accès pompiers
-                      </span>
-                      <span className="sr-only">
-                        {mockData.fire_fighter ? 'Disponible' : 'Non disponible'}
-                      </span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <span 
-                        className={`w-5 h-5 flex items-center justify-center rounded-full ${mockData.social_worker ? 'bg-green-500' : 'bg-gray-300'}`}
-                        aria-hidden="true"
-                      >
-                        {mockData.social_worker ? '✓' : '✗'}
-                      </span>
-                      <span className={mockData.social_worker ? 'text-black' : 'text-gray-500'}>
-                        Assistante sociale
-                      </span>
-                      <span className="sr-only">
-                        {mockData.social_worker ? 'Disponible' : 'Non disponible'}
-                      </span>
-                    </li>
-                  </ul>
-                </div>
-              )}
-
-              <div className="bg-slate-50 rounded-lg p-4">
-                <h3 className="font-bold text-primary mb-3 flex items-center gap-2">
-                  <span aria-hidden="true">♿</span>
-                  Accessibilité
-                </h3>
-                {accessibilityOptions && Object.keys(accessibilityOptions).length > 0 ? (
-                  <ul className="space-y-2" role="list">
-                    {accessibilityOptions.wheelchairAccessibleEntrance !== undefined && (
-                      <li className="flex items-center gap-2">
-                        <span 
-                          className={`w-5 h-5 flex items-center justify-center rounded-full text-white text-xs ${accessibilityOptions.wheelchairAccessibleEntrance ? 'bg-green-500' : 'bg-gray-300'}`}
-                          aria-hidden="true"
-                        >
-                          {accessibilityOptions.wheelchairAccessibleEntrance ? '✓' : '✗'}
-                        </span>
-                        <span className={accessibilityOptions.wheelchairAccessibleEntrance ? 'text-black' : 'text-gray-500'}>
-                          Entrée accessible fauteuil roulant
-                        </span>
-                        <span className="sr-only">
-                          {accessibilityOptions.wheelchairAccessibleEntrance ? 'Disponible' : 'Non disponible'}
-                        </span>
-                      </li>
-                    )}
-                    {accessibilityOptions.wheelchairAccessibleParking !== undefined && (
-                      <li className="flex items-center gap-2">
-                        <span 
-                          className={`w-5 h-5 flex items-center justify-center rounded-full text-white text-xs ${accessibilityOptions.wheelchairAccessibleParking ? 'bg-green-500' : 'bg-gray-300'}`}
-                          aria-hidden="true"
-                        >
-                          {accessibilityOptions.wheelchairAccessibleParking ? '✓' : '✗'}
-                        </span>
-                        <span className={accessibilityOptions.wheelchairAccessibleParking ? 'text-black' : 'text-gray-500'}>
-                          Parking accessible fauteuil roulant
-                        </span>
-                        <span className="sr-only">
-                          {accessibilityOptions.wheelchairAccessibleParking ? 'Disponible' : 'Non disponible'}
-                        </span>
-                      </li>
-                    )}
-                    {accessibilityOptions.wheelchairAccessibleRestroom !== undefined && (
-                      <li className="flex items-center gap-2">
-                        <span 
-                          className={`w-5 h-5 flex items-center justify-center rounded-full text-white text-xs ${accessibilityOptions.wheelchairAccessibleRestroom ? 'bg-green-500' : 'bg-gray-300'}`}
-                          aria-hidden="true"
-                        >
-                          {accessibilityOptions.wheelchairAccessibleRestroom ? '✓' : '✗'}
-                        </span>
-                        <span className={accessibilityOptions.wheelchairAccessibleRestroom ? 'text-black' : 'text-gray-500'}>
-                          Toilettes accessibles fauteuil roulant
-                        </span>
-                        <span className="sr-only">
-                          {accessibilityOptions.wheelchairAccessibleRestroom ? 'Disponible' : 'Non disponible'}
-                        </span>
-                      </li>
-                    )}
-                    {accessibilityOptions.wheelchairAccessibleSeating !== undefined && (
-                      <li className="flex items-center gap-2">
-                        <span 
-                          className={`w-5 h-5 flex items-center justify-center rounded-full text-white text-xs ${accessibilityOptions.wheelchairAccessibleSeating ? 'bg-green-500' : 'bg-gray-300'}`}
-                          aria-hidden="true"
-                        >
-                          {accessibilityOptions.wheelchairAccessibleSeating ? '✓' : '✗'}
-                        </span>
-                        <span className={accessibilityOptions.wheelchairAccessibleSeating ? 'text-black' : 'text-gray-500'}>
-                          Places assises accessibles
-                        </span>
-                        <span className="sr-only">
-                          {accessibilityOptions.wheelchairAccessibleSeating ? 'Disponible' : 'Non disponible'}
-                        </span>
-                      </li>
-                    )}
-                  </ul>
-                ) : (
-                  <p className="text-gray-500 text-sm italic">
-                    Informations d&apos;accessibilité non disponibles pour cet établissement.
-                  </p>
-                )}
-              </div>
-              {!mockData && !accessibilityOptions && (
-                <div className="col-span-full text-center py-4">
-                  <p className="text-gray-500 italic">
-                    Les caractéristiques de cet établissement ne sont pas encore disponibles.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </section>
-
         {matchingServices.length > 0 && (
           <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="affluence-heading">
             <h2 id="affluence-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Affluence en temps réel</h2>
@@ -438,6 +301,67 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
             )}
           </section>
         )}
+
+        <section className='py-6 px-4 flex flex-col gap-4' aria-labelledby="characteristics-heading">
+          <h2 id="characteristics-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Spécifications</h2>
+          
+          {specificationsLoading ? (
+            <div className="flex items-center gap-2 text-slate-500" role="status" aria-live="polite">
+              <div className="w-4 h-4 border-2 border-slate-300 border-t-primary rounded-full animate-spin" aria-hidden="true"></div>
+              <span>Chargement des caractéristiques...</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(() => {
+                const specifications = [
+                  mockData?.fire_fighter && {
+                    imagePath: "/images/icons/fire_fighter-white.svg",
+                    description: "Accès pompiers"
+                  },
+                  mockData?.social_worker && {
+                    imagePath: "/images/icons/fire_fighter-white.svg",
+                    description: "Assistante sociale"
+                  },
+                  accessibilityOptions?.wheelchairAccessibleEntrance && {
+                    imagePath: "/images/icons/wheelchair-white.svg",
+                    description: "Entrée accessible fauteuil roulant"
+                  },
+                  accessibilityOptions?.wheelchairAccessibleParking && {
+                    imagePath: "/images/icons/wheelchair-white.svg",
+                    description: "Parking accessible fauteuil roulant"
+                  },
+                  accessibilityOptions?.wheelchairAccessibleRestroom && {
+                    imagePath: "/images/icons/wheelchair-white.svg",
+                    description: "Toilettes accessibles fauteuil roulant"
+                  },
+                  accessibilityOptions?.wheelchairAccessibleSeating && {
+                    imagePath: "/images/icons/wheelchair-white.svg",
+                    description: "Places assises accessibles"
+                  }
+                ].filter(Boolean) as { imagePath: string; description: string }[];
+
+                const isOdd = specifications.length % 2 !== 0;
+
+                return specifications.map((spec, index) => (
+                  <Specification
+                    key={spec.description}
+                    fullWidth={isOdd && index === specifications.length - 1}
+                    imagePath={spec.imagePath}
+                    description={spec.description}
+                  />
+                ));
+              })()}
+              
+              {!mockData && !accessibilityOptions && (
+                <div className="col-span-full text-center py-4">
+                  <p className="text-gray-500 italic">
+                    Les spécifications de cet établissement ne sont pas encore disponibles.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </section>
       </main>
     </>
   );
