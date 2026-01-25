@@ -8,6 +8,7 @@ interface AccessibilityOptions {
 }
 
 interface PlaceDetailsResponse {
+  formattedAddress?: string;
   accessibilityOptions?: AccessibilityOptions;
 }
 
@@ -33,7 +34,7 @@ export async function GET(
     );
   }
 
-  const url = `https://places.googleapis.com/v1/places/${placeId}?fields=accessibilityOptions&key=${apiKey}`;
+  const url = `https://places.googleapis.com/v1/places/${placeId}?fields=formattedAddress,accessibilityOptions&key=${apiKey}`;
 
   try {
     const response = await fetch(url, {
@@ -55,7 +56,10 @@ export async function GET(
 
     const data: PlaceDetailsResponse = await response.json();
     
-    return NextResponse.json(data.accessibilityOptions || {});
+    return NextResponse.json({
+      formattedAddress: data.formattedAddress,
+      accessibilityOptions: data.accessibilityOptions || {}
+    });
 
   } catch (error) {
     console.error(`Error fetching accessibility for ${placeId}:`, error);
