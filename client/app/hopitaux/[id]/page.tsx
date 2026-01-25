@@ -38,6 +38,11 @@ interface AccessibilityOptions {
   wheelchairAccessibleSeating?: boolean;
 }
 
+interface PlaceDetails {
+  formattedAddress?: string;
+  accessibilityOptions: AccessibilityOptions;
+}
+
 interface Professionnal {
   internist: boolean;
   pmr: boolean;
@@ -76,6 +81,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [mockData, setMockData] = useState<MockHospitalData | null>(null);
   const [accessibilityOptions, setAccessibilityOptions] = useState<AccessibilityOptions | null>(null);
+  const [placeAddress, setPlaceAddress] = useState<string | null>(null);
   const [specificationsLoading, setspecificationsLoading] = useState(true);
   const router = useRouter();
 
@@ -171,8 +177,9 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           if (mockHospital.place_id && mockHospital.place_id !== 'TODO_GOOGLE_PLACE_ID') {
             const accessRes = await fetch(`/api/hospitals/accessibility/${mockHospital.place_id}`);
             if (accessRes.ok) {
-              const accessData = await accessRes.json();
-              setAccessibilityOptions(accessData);
+              const placeData: PlaceDetails = await accessRes.json();
+              setPlaceAddress(placeData.formattedAddress || null);
+              setAccessibilityOptions(placeData.accessibilityOptions);
             }
           }
         }
@@ -267,6 +274,28 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
         <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="map-heading">
           <h2 id="map-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Localisation</h2>
           <MapWrapper />
+          <div className="w-full max-w-4xl flex flex-col items-center justify-center gap-2">
+            {placeAddress && (
+              <div className="flex items-center justify-center gap-2 text-black">
+                <p className="text-sm md:text-base lg:text-lg text-center font-bold">Adresse : {placeAddress}</p>
+              </div>
+            )}
+            
+            {hospital.fields.phone && (
+              <a 
+                href={`tel:${hospital.fields.phone}`} 
+                className="flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-red-600 rounded px-2 py-1 -ml-2 hover:bg-black/10 transition-colors"
+                aria-label={`Appeler ${hospital.fields.name} au ${hospital.fields.phone}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="text-sm md:text-base lg:text-lg text-start sm:text-center w-full text-black font-bold underline">Téléphone : {hospital.fields.phone}</span>
+              </a>
+            )}
+            {!hospital.fields.phone && (
+              <p className="text-white/70 text-sm italic">Aucun numéro de téléphone disponible</p>
+            )}
+          </div>
+          
           <button 
             className="bg-primary text-white px-4 py-2 rounded-full font-bold w-fit focus:outline-none focus:ring-4 focus:ring-red-600" 
             type="button"
@@ -467,12 +496,10 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
                     }
                   ].filter(Boolean) as { imagePath: string; description: string }[];
 
-                  const isOdd = specializations.length % 4 !== 0;
-
                   return specializations.map((spec, index) => (
                     <Specification
                       key={spec.description}
-                      fullWidth={isOdd && index === specializations.length - 1}
+                      fullWidth={false}
                       imagePath={spec.imagePath}
                       description={spec.description}
                     />
