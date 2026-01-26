@@ -1,7 +1,6 @@
 'use client';
 
 import React from "react";
-import { FaSearch } from "react-icons/fa";
 
 type SearchBarProps = {
   value?: string;
@@ -42,12 +41,25 @@ export default function SearchBar({
         "px-6 py-3",
         "shadow-sm",
         "font-[Arial]",
-        "focus-within:ring-0",
+        "focus-within:ring-4 focus-within:ring-red-600",
         className,
       ].join(" ")}
     >
       <div className="flex items-center justify-center shrink-0 mr-4">
-        <FaSearch className="text-2xl md:text-3xl text-black" aria-hidden="true" />
+        <svg 
+          className="w-5 h-5 md:w-6 md:h-6 text-black" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth={2.5} 
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" 
+          />
+        </svg>
       </div>
 
       <input
@@ -60,6 +72,7 @@ export default function SearchBar({
         }}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
+        aria-label={placeholder}
         className={[
           "w-full bg-transparent outline-none",
           "text-lg md:text-xl",
