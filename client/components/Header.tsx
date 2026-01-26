@@ -19,17 +19,18 @@ export default function Header() {
             <li className="w-full flex md:block items-center justify-center">
                 <Link 
                   href="/"
+                  aria-label="Accéder à la page d'accueil"
                   onMouseEnter={() => setHoveredLink('/')}
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
                     isActive('/') || isHovered('/') 
-                      ? 'bg-black rounded-[35px]' 
+                      ? 'bg-black rounded-full' 
                       : ''
                   }`}
                 >
                     <Image 
                         src={(isActive('/') || isHovered('/')) ? "/images/icons/home-white.svg" : "/images/icons/home-black.svg"}
-                        alt="Icone d'accueil" 
+                        alt="" 
                         width={100} 
                         height={100} 
                         className="w-10 h-10"
@@ -43,24 +44,25 @@ export default function Header() {
             </li>
             <li className="w-full flex md:block items-center justify-center">
                 <Link 
-                  href="/services"
-                  onMouseEnter={() => setHoveredLink('/services')}
+                  href="/map"
+                  aria-label="Accéder à la carte"
+                  onMouseEnter={() => setHoveredLink('/map')}
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
-                    isActive('/services') || isHovered('/services')
-                      ? 'bg-black rounded-[35px]' 
+                    isActive('/map') || isHovered('/map')
+                      ? 'bg-black rounded-full' 
                       : ''
                   }`}
                 >
                     <Image 
-                        src={(isActive('/services') || isHovered('/services')) ? "/images/icons/map-white.svg" : "/images/icons/map-black.svg"}
-                        alt="Icone de carte" 
+                        src={(isActive('/map') || isHovered('/map')) ? "/images/icons/map-white.svg" : "/images/icons/map-black.svg"}
+                        alt="" 
                         width={100} 
                         height={100} 
                         className="w-10 h-10"
                     />
                     <span className={`hidden md:inline text-base font-bold transition-colors ${
-                      (isActive('/services') || isHovered('/services')) ? 'text-white' : 'text-gray-700'
+                      (isActive('/map') || isHovered('/map')) ? 'text-white' : 'text-gray-700'
                     }`}>
                       Carte
                     </span>
@@ -69,17 +71,18 @@ export default function Header() {
             <li className="w-full flex md:block items-center justify-center">
                 <Link 
                   href="/hopitaux"
+                  aria-label="Accéder à la liste des hôpitaux"
                   onMouseEnter={() => setHoveredLink('/hopitaux')}
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
                     isActive('/hopitaux') || isHovered('/hopitaux')
-                      ? 'bg-black rounded-[35px]' 
+                      ? 'bg-black rounded-full' 
                       : ''
                   }`}
                 >
                     <Image 
                         src={(isActive('/hopitaux') || isHovered('/hopitaux')) ? "/images/icons/hospital-white.svg" : "/images/icons/hospital-black.svg"}
-                        alt="Icone d'un hôpital" 
+                        alt="" 
                         width={100} 
                         height={100} 
                         className="w-10 h-10"

@@ -28,6 +28,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# mock data files
+/data/hospitalMock.json
+
 # vercel
 .vercel
 
