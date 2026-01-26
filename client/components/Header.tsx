@@ -24,7 +24,7 @@ export default function Header() {
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
                     isActive('/') || isHovered('/') 
-                      ? 'bg-black rounded-[35px]' 
+                      ? 'bg-black rounded-full' 
                       : ''
                   }`}
                 >
@@ -50,7 +50,7 @@ export default function Header() {
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
                     isActive('/map') || isHovered('/map')
-                      ? 'bg-black rounded-[35px]' 
+                      ? 'bg-black rounded-full' 
                       : ''
                   }`}
                 >
@@ -76,7 +76,7 @@ export default function Header() {
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
                     isActive('/hopitaux') || isHovered('/hopitaux')
-                      ? 'bg-black rounded-[35px]' 
+                      ? 'bg-black rounded-full' 
                       : ''
                   }`}
                 >
