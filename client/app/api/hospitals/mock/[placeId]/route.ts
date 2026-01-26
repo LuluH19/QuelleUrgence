@@ -25,6 +25,7 @@ interface Professionnal {
 interface MockHospital {
   name: string;
   place_id: string;
+  description: string;
   fire_fighter: boolean;
   social_worker: boolean;
   professionnal: Professionnal;
@@ -48,7 +49,7 @@ export async function GET(
       );
     }
 
-    const mockFilePath = path.join(process.cwd(), 'data', 'hospitalMock.json');
+    const mockFilePath = path.join(process.cwd(), 'public', 'data', 'hospitalMock.json');
     
     try {
       await fs.access(mockFilePath);

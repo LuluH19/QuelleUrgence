@@ -55,6 +55,7 @@ interface PlaceDetails {
 interface MockHospitalData {
   name: string;
   place_id: string;
+  description: string;
   fire_fighter: boolean;
   social_worker: boolean;
   professionnal: Professionnal;
@@ -132,6 +133,12 @@ const HospitalCard: FC<{ hospital: HospitalWithMock }> = memo(({ hospital }) => 
           </span>
         )}
       </div>
+
+      {hospital.mockData?.description && (
+        <p className="text-white/90 text-sm mb-3 leading-relaxed">
+          {hospital.mockData.description}
+        </p>
+      )}
 
       {hospital.fields.phone && (
         <a 

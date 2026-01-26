@@ -66,6 +66,7 @@ interface Professionnal {
 interface MockHospitalData {
   name: string;
   place_id: string;
+  description: string;
   fire_fighter: boolean;
   social_worker: boolean;
   professionnal: Professionnal;
@@ -269,6 +270,17 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
               {hospital.fields.name}
             </h1>
           </div>
+        </section>
+
+        <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="description-heading">
+          {mockData?.description && (
+            <div className="w-full max-w-4xl mb-4">
+              <h2 id="description-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full mb-3'>À propos de cet établissement</h2>
+              <p className="text-base md:text-lg text-gray-700 leading-relaxed bg-blue-50 p-4 rounded-lg border-l-4 border-primary">
+                {mockData.description}
+              </p>
+            </div>
+          )}
         </section>
 
         <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="map-heading">
