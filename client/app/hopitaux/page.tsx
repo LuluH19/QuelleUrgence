@@ -184,7 +184,7 @@ export default function HopitauxPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [distanceOrder, setDistanceOrder] = useState<'asc' | 'desc'>('asc');
+  const [maxDistanceKm, setMaxDistanceKm] = useState<number | null>(null);
   const [selectedSpecifications, setSelectedSpecifications] = useState<string[]>([]);
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
 
@@ -246,8 +246,18 @@ export default function HopitauxPage() {
   }, []);
 
   const distanceOptions = [
-    { value: 'asc', label: 'Plus proche' },
-    { value: 'desc', label: 'Plus loin' }
+    { value: '', label: 'Tous les hôpitaux' },
+    { value: '5', label: 'Jusqu\'à 5 km' },
+    { value: '10', label: 'Jusqu\'à 10 km' },
+    { value: '15', label: 'Jusqu\'à 15 km' },
+    { value: '20', label: 'Jusqu\'à 20 km' },
+    { value: '25', label: 'Jusqu\'à 25 km' },
+    { value: '30', label: 'Jusqu\'à 30 km' },
+    { value: '35', label: 'Jusqu\'à 35 km' },
+    { value: '40', label: 'Jusqu\'à 40 km' },
+    { value: '45', label: 'Jusqu\'à 45 km' },
+    { value: '50', label: 'Jusqu\'à 50 km' },
+    { value: '100', label: 'Jusqu\'à 100 km' }
   ];
 
   const specificationOptions = [
@@ -282,7 +292,6 @@ export default function HopitauxPage() {
   const filteredHospitals = useMemo(() => {
     let filtered = [...hospitals];
 
-    // Filtre par recherche
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(hospital => 
@@ -324,14 +333,17 @@ export default function HopitauxPage() {
         });
       });
     }
-    filtered.sort((a, b) => {
-      const distA = a.fields.dist ? parseFloat(a.fields.dist) : Infinity;
-      const distB = b.fields.dist ? parseFloat(b.fields.dist) : Infinity;
-      return distanceOrder === 'asc' ? distA - distB : distB - distA;
-    });
+
+    if (maxDistanceKm !== null) {
+      filtered = filtered.filter(hospital => {
+        const distanceM = hospital.fields.dist ? parseFloat(hospital.fields.dist) : Infinity;
+        const distanceKm = distanceM / 1000;
+        return distanceKm <= maxDistanceKm;
+      });
+    }
 
     return filtered;
-  }, [hospitals, searchQuery, distanceOrder, selectedSpecifications, selectedSpecializations]);
+  }, [hospitals, searchQuery, maxDistanceKm, selectedSpecifications, selectedSpecializations]);
 
   return (
     <>
@@ -353,8 +365,8 @@ export default function HopitauxPage() {
                 <MultiSelectFilter
                   label="Distance"
                   options={distanceOptions}
-                  selectedValues={[distanceOrder]}
-                  onChange={(values) => setDistanceOrder(values[0] as 'asc' | 'desc')}
+                  selectedValues={maxDistanceKm !== null ? [String(maxDistanceKm)] : ['']}
+                  onChange={(values) => setMaxDistanceKm(values[0] ? parseInt(values[0], 10) : null)}
                   mode="single"
                 />
                 <MultiSelectFilter
