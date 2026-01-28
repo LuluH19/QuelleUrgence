@@ -27,3 +27,19 @@ a {
   text-decoration: none;
 }
 
+// Leaflet popup styles
+.hospital-popup .leaflet-popup-content-wrapper {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.hospital-popup .leaflet-popup-content {
+  margin: 0;
+  padding: 0;
+}
+
+// User location marker styles
+.user-location-marker {
+  z-index: 1000 !important;
+  position: relative;
+}

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
+import type { ComponentType } from 'react'
 
 interface Hospital {
   recordid: string
@@ -67,10 +68,18 @@ const extractCoordinates = (hospital: Hospital): [number, number] | null => {
   return null
 }
 
-function MapContent() {
+interface MapContentProps {
+  fullScreen?: boolean
+}
+
+function MapContent({ fullScreen = false }: MapContentProps) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<LeafletMap | null>(null)
   const markersRef = useRef<LeafletMarker[]>([])
+  const userMarkerRef = useRef<LeafletMarker | null>(null)
+  const userPositionRef = useRef<[number, number] | null>(null)
+  const hospitalsDataRef = useRef<Array<{ hospital: Hospital; coords: [number, number] }>>([])
+  const mapInitializedRef = useRef<boolean>(false)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !mapRef.current) return
@@ -106,6 +115,20 @@ function MapContent() {
         popupAnchor: [0, -41],
       })
 
+      // Blue user location icon
+      const userIcon = L.divIcon({
+        className: 'user-location-marker',
+        html: `
+          <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="18" fill="#3B82F6" stroke="#FFFFFF" stroke-width="3" opacity="0.9"/>
+            <circle cx="20" cy="20" r="10" fill="#FFFFFF"/>
+            <circle cx="20" cy="20" r="5" fill="#3B82F6"/>
+          </svg>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+      })
+
       ;(container as any)._leaflet_id = null
 
       const map = L.map(container, {
@@ -139,6 +162,65 @@ function MapContent() {
         subtree: true
       })
 
+      // Create popup HTML with hospital name and itinerary button
+      const createPopupHTML = (hospitalName: string, lat: number, lng: number): string => {
+        const userPos = userPositionRef.current
+        // Only include origin if we have a valid user position (not fallback Paris)
+        let itineraryUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
+        
+        // Only add origin if user position is available and not the default Paris fallback
+        if (userPos) {
+          itineraryUrl += `&origin=${userPos[0]},${userPos[1]}`
+        }
+        
+        return `
+          <div style="padding: 8px; min-width: 200px;">
+            <div style="font-weight: bold; margin-bottom: 12px; font-size: 16px; color: #1f2937;">
+              ${hospitalName}
+            </div>
+            <a 
+              href="${itineraryUrl}" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style="
+                display: inline-block;
+                background-color: #DC2626;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 14px;
+                transition: background-color 0.2s;
+                width: 100%;
+                text-align: center;
+                box-sizing: border-box;
+              "
+              onmouseover="this.style.backgroundColor='#B91C1C'"
+              onmouseout="this.style.backgroundColor='#DC2626'"
+            >
+              Itinéraire
+            </a>
+          </div>
+        `
+      }
+
+      // Update all popups with current user position
+      const updatePopups = () => {
+        hospitalsDataRef.current.forEach(({ hospital, coords }) => {
+          const [lat, lng] = coords
+          const marker = markersRef.current.find(m => {
+            const markerLatLng = m.getLatLng()
+            return Math.abs(markerLatLng.lat - lat) < 0.0001 && Math.abs(markerLatLng.lng - lng) < 0.0001
+          })
+          
+          if (marker) {
+            const newPopupContent = createPopupHTML(hospital.fields.name, lat, lng)
+            marker.setPopupContent(newPopupContent)
+          }
+        })
+      }
+
       // Load and display hospitals on the map
       const loadHospitals = async (latitude: number, longitude: number) => {
         try {
@@ -148,7 +230,17 @@ function MapContent() {
             return
           }
 
+          // Ensure map + container are ready before adding markers (Leaflet appendChild safety)
+          const mapInstance = mapInstanceRef.current
+          if (!mapInstance || !mapInstance.getContainer()) {
+            console.error('Map container not ready')
+            return
+          }
+
           let markersAdded = 0
+          
+          // Store hospitals data for popup updates
+          hospitalsDataRef.current = []
           
           // Add red markers for each hospital
           hospitals.forEach((hospital) => {
@@ -158,41 +250,57 @@ function MapContent() {
             }
 
             const [lat, lng] = coords
+            hospitalsDataRef.current.push({ hospital, coords })
             
-            const marker = L.marker([lat, lng], { 
-              icon: redIcon,
-              keyboard: false
-            })
-              .addTo(map)
-              .bindPopup(`<b>${hospital.fields.name}</b>`)
-              .on('popupopen', () => {
-                setTimeout(() => {
-                  const closeButton = container.querySelector('.leaflet-popup-close-button') as HTMLElement
-                  if (closeButton) {
-                    closeButton.setAttribute('tabindex', '-1')
-                  }
-                }, 10)
+            const popupContent = createPopupHTML(hospital.fields.name, lat, lng)
+            
+            if (!mapInstanceRef.current) return
+
+            const marker = L.marker([lat, lng], { icon: redIcon })
+              .addTo(mapInstanceRef.current)
+              .bindPopup(popupContent, {
+                className: 'hospital-popup',
+                closeButton: true,
+                autoClose: false,
+                closeOnClick: false,
               })
+            
+            // Open popup on hover
+            marker.on('mouseover', () => {
+              marker.openPopup()
+            })
+            
+            // Optional: close popup on mouseout (comment out if you want it to stay open)
+            // marker.on('mouseout', () => {
+            //   marker.closePopup()
+            // })
             
             markersRef.current.push(marker)
             markersAdded++
           })
 
-          // Adjust map view to include all markers
-          if (markersAdded > 0) {
-            const coordsList = hospitals
-              .map(h => extractCoordinates(h))
-              .filter((c): c is [number, number] => c !== null)
-            
-            if (coordsList.length > 0) {
-              const bounds = L.latLngBounds(coordsList)
-              bounds.extend([latitude, longitude])
-              map.fitBounds(bounds, { padding: [50, 50] })
-            }
-          }
+          // Don't recenter the map after hospitals load - let user control it
+          // The map is already centered on user position when geolocation succeeds
         } catch (error) {
           console.error('Error loading hospitals:', error)
         }
+      }
+
+      // Filter out Chrome extension errors from console
+      const originalError = console.error
+      console.error = (...args: any[]) => {
+        const message = args[0]?.toString() || ''
+        // Ignore Chrome extension errors
+        if (message.includes('runtime.lastError') || message.includes('Receiving end does not exist')) {
+          return
+        }
+        originalError.apply(console, args)
+      }
+
+      // Validate coordinates (basic sanity check for France)
+      const isValidCoordinates = (lat: number, lng: number): boolean => {
+        // France is roughly between 41°N and 51°N, and 5°W and 8°E
+        return lat >= 41 && lat <= 51 && lng >= -5 && lng <= 8
       }
 
       // Get user location and load hospitals
@@ -201,20 +309,93 @@ function MapContent() {
           async (position) => {
             const { latitude, longitude } = position.coords
             
-            // Center map on user position
-            map.setView([latitude, longitude], 12)
+            // Debug: log user position
+            console.log('User position:', latitude, longitude)
+            
+            // Validate coordinates before using them
+            if (!isValidCoordinates(latitude, longitude)) {
+              console.warn('Invalid coordinates detected, using Paris as fallback:', latitude, longitude)
+              // Use Paris coordinates instead
+              userPositionRef.current = [48.8566, 2.3522]
+              
+              // Add user location marker at Paris
+              if (userMarkerRef.current) {
+                userMarkerRef.current.remove()
+              }
+              userMarkerRef.current = L.marker([48.8566, 2.3522], { 
+                icon: userIcon,
+                zIndexOffset: 1000
+              })
+                .addTo(map)
+                .bindPopup('Votre position (approximative)', { closeButton: false })
+              
+              if (!mapInitializedRef.current) {
+                map.setView([48.8566, 2.3522], 13)
+                mapInitializedRef.current = true
+              }
+              
+              await loadHospitals(48.8566, 2.3522)
+              return
+            }
+            
+            // Store user position for itinerary links (only if geolocation succeeded)
+            userPositionRef.current = [latitude, longitude]
+            
+            // Add user location marker
+            if (userMarkerRef.current) {
+              userMarkerRef.current.remove()
+            }
+            userMarkerRef.current = L.marker([latitude, longitude], { 
+              icon: userIcon,
+              zIndexOffset: 1000 // Ensure user marker is on top
+            })
+              .addTo(map)
+              .bindPopup('Votre position', { closeButton: false })
+            
+            // Center map on user position only once at initialization
+            if (!mapInitializedRef.current) {
+              map.setView([latitude, longitude], 13)
+              mapInitializedRef.current = true
+            }
             
             // Load hospitals
             await loadHospitals(latitude, longitude)
+            
+            // Update popups with user position
+            updatePopups()
           },
           async (error) => {
-            console.error("Geolocation error:", error)
-            // Fallback to Paris if geolocation fails
+            if (error.code === 1) {
+              console.warn("🚫 Géolocalisation refusée par l'utilisateur")
+            } else if (error.code === 2) {
+              console.warn('📍 Position indisponible')
+            } else if (error.code === 3) {
+              console.warn('⏱️ Timeout de géolocalisation')
+            } else {
+              console.error("Geolocation error:", error)
+            }
+
+            // Don't set userPositionRef if geolocation failed or was denied
+            // This way Google Maps will use the user's current location automatically
+            userPositionRef.current = null
+            
+            // Ensure the map is initialized before fallback
+            if (!mapInitializedRef.current && mapInstanceRef.current) {
+              mapInstanceRef.current.setView([48.8566, 2.3522], 13)
+              mapInitializedRef.current = true
+            }
+
+            // Fallback to Paris for loading hospitals
             await loadHospitals(48.8566, 2.3522)
+          },
+          {
+            timeout: 10000,
+            enableHighAccuracy: false,
           }
         )
       } else {
         // Fallback to Paris if geolocation not supported
+        userPositionRef.current = null
         await loadHospitals(48.8566, 2.3522)
       }
       
@@ -231,6 +412,10 @@ function MapContent() {
     return () => {
       markersRef.current.forEach(marker => marker.remove())
       markersRef.current = []
+      if (userMarkerRef.current) {
+        userMarkerRef.current.remove()
+        userMarkerRef.current = null
+      }
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
@@ -239,6 +424,10 @@ function MapContent() {
     }
   }, [])
 
+
+  const mapClasses = fullScreen
+    ? "w-full h-full"
+    : "w-full h-[300px] md:h-[400px] lg:h-[500px] rounded-lg border-2 border-gray-300 shadow-md"
 
   return (
     <>
@@ -249,11 +438,15 @@ function MapContent() {
       />
       <div
         ref={mapRef}
-        className="w-full h-[300px] md:h-[400px] lg:h-[500px] rounded-lg border-2 border-gray-300 shadow-md"
-        aria-hidden="true"
+        className={mapClasses}
+        aria-label="Carte interactive des hôpitaux"
       />
     </>
   )
+}
+
+interface MapComponentProps {
+  fullScreen?: boolean
 }
 
 const MapComponent = dynamic(() => Promise.resolve(MapContent), {
@@ -263,6 +456,6 @@ const MapComponent = dynamic(() => Promise.resolve(MapContent), {
       <p className="text-gray-500">Chargement de la carte...</p>
     </div>
   )
-})
+}) as ComponentType<MapContentProps>
 
 export default MapComponent
