@@ -1,19 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-
-interface Option {
-  value: string;
-  label: string;
-}
-
-interface MultiSelectFilterProps {
-  label: string;
-  options: Option[];
-  selectedValues: string[];
-  onChange: (selected: string[]) => void;
-  mode?: 'single' | 'multiple';
-}
+import type { Option, MultiSelectFilterProps } from '@/types/filter';
 
 export default function MultiSelectFilter({ 
   label, 
