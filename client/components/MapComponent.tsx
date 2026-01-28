@@ -3,22 +3,7 @@
 import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
-
-interface Hospital {
-  recordid: string
-  fields: {
-    name: string
-    phone?: string
-    dist?: string
-    meta_geo_point?: [number, number] | number[]
-    geometry?: {
-      coordinates?: [number, number] | number[]
-    }
-    lat?: number
-    lon?: number
-    [key: string]: any
-  }
-}
+import type { Hospital } from '@/types/api'
 
 async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
   try {

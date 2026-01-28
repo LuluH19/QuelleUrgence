@@ -1,44 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import type AttendanceData from '@/types/attendance';
 
-interface AttendanceData {
-  institution: {
-    institutionCode: string;
-    institutionName: string;
-  };
-  indicatorCode: string;
-  indicatorName: string;
-  day: string;
-  timeSlot1: number;
-  timeSlot2: number;
-  timeSlot3: number;
-  timeSlot4: number;
-  timeSlot5: number;
-  timeSlot6: number;
-  timeSlot7: number;
-  timeSlot8: number;
-  timeSlot9: number;
-  timeSlot10: number;
-  timeSlot11: number;
-  timeSlot12: number;
-  timeSlot13: number;
-  timeSlot14: number;
-  timeSlot15: number;
-  timeSlot16: number;
-  timeSlot17: number;
-  timeSlot18: number;
-  timeSlot19: number;
-  timeSlot20: number;
-  timeSlot21: number;
-  timeSlot22: number;
-  timeSlot23: number;
-  timeSlot24: number;
-}
-
-type AttendanceApiResponse = AttendanceData[];
-
-async function getAttendance(hospitalCode: string): Promise<AttendanceApiResponse | null> {
+async function getAttendance(hospitalCode: string): Promise<AttendanceData[] | null> {
   const apiUrl = `/api/attendance/${hospitalCode}`; 
   
   try {
@@ -50,7 +15,7 @@ async function getAttendance(hospitalCode: string): Promise<AttendanceApiRespons
     }
 
     const data = await res.json();
-    return data as AttendanceApiResponse;
+    return data as AttendanceData[];
   } catch (error) {
     console.error("Échec de la récupération des données d'affluence", error);
     return null;
@@ -89,7 +54,7 @@ function StatCard({ title, time, patients }: { title: string; time: number | nul
 
 
 export default function Attendance({ hospitalCode }: { hospitalCode: string }) {
-  const [attendanceData, setAttendanceData] = useState<AttendanceApiResponse | null>(null);
+  const [attendanceData, setAttendanceData] = useState<AttendanceData[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -131,8 +96,8 @@ export default function Attendance({ hospitalCode }: { hospitalCode: string }) {
 
   // Fonction pour extraire une valeur d'un indicateur
   const getValue = (code: string) => {
-    const data = attendanceData.find(d => d.indicatorCode === code);
-    return data ? (data as any)[currentTimeSlotKey] : null;
+    const data = attendanceData?.find(d => d.indicatorCode === code);
+    return data ? data[currentTimeSlotKey as keyof AttendanceData] : null;
   };
 
   // Extraire toutes les valeurs nécessaires en se basant sur la nouvelle logique
@@ -146,7 +111,7 @@ export default function Attendance({ hospitalCode }: { hospitalCode: string }) {
   const totalPatientsInER = getValue('PAM'); // Patients "au sein du SAU" (3ème groupe)
 
   // Le vrai total est la somme des 3 groupes de patients distincts
-  const totalPatientSum = (seeNursePatients ?? 0) + (waitingForDoctorPatients ?? 0) + (totalPatientsInER ?? 0);
+  const totalPatientSum = (seeNursePatients as number) + (waitingForDoctorPatients as number) + (totalPatientsInER as number);
 
   return (
     <section
@@ -163,18 +128,18 @@ export default function Attendance({ hospitalCode }: { hospitalCode: string }) {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard
           title="Temps avant de voir l'infirmier"
-          time={seeNurseTime}
-          patients={seeNursePatients}
+          time={seeNurseTime as number}
+          patients={seeNursePatients as number}
         />
         <StatCard
           title="Temps avant de voir le médecin"
-          time={seeDoctorTime}
-          patients={waitingForDoctorPatients}
+          time={seeDoctorTime as number}
+          patients={waitingForDoctorPatients as number}
         />
         <StatCard
           title="Temps avant de quitter le service"
-          time={totalTime}
-          patients={totalPatientsInER}
+          time={totalTime as number}
+          patients={totalPatientsInER as number}
         />
       </div>
       <p className="text-xs text-slate-500 text-center">

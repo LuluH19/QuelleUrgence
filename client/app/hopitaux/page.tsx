@@ -6,67 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import SearchBar from '@/components/SearchBar';
 import MultiSelectFilter from '@/components/MultiSelectFilter';
-
+import type { Hospital, Professionnal, PlaceDetails, MockHospitalData, HospitalWithMock } from '@/types/api';
 export const dynamic = 'force-dynamic';
-
-// --- Types Definition ---
-
-interface Hospital {
-  recordid: string;
-  fields: {
-    name: string;
-    phone?: string;
-    dist?: string;
-  };
-}
-
-interface Professionnal {
-  internist: boolean;
-  pmr: boolean;
-  rheumatologist: boolean;
-  cardiologist: boolean;
-  pulmonologist: boolean;
-  nephrologist: boolean;
-  gasteroenterologist: boolean;
-  endocrinologist: boolean;
-  dermatologist: boolean;
-  ent: boolean;
-  gynecologist: boolean;
-  urologist: boolean;
-  orthopedist: boolean;
-  psychologist: boolean;
-  neurosurgeon: boolean;
-  pediatric_surgeon: boolean;
-  orthopedic_surgeon: boolean;
-}
-
-interface AccessibilityOptions {
-  wheelchairAccessibleParking?: boolean;
-  wheelchairAccessibleEntrance?: boolean;
-  wheelchairAccessibleRestroom?: boolean;
-  wheelchairAccessibleSeating?: boolean;
-}
-
-interface PlaceDetails {
-  formattedAddress?: string;
-  accessibilityOptions: AccessibilityOptions;
-}
-
-interface MockHospitalData {
-  name: string;
-  place_id: string;
-  fire_fighter: boolean;
-  social_worker: boolean;
-  professionnal: Professionnal;
-}
-
-interface HospitalWithMock extends Hospital {
-  mockData?: MockHospitalData;
-  placeAddress?: string;
-  accessibilityOptions?: AccessibilityOptions;
-}
-
-// --- API Fetching Functions ---
 
 async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
   try {
@@ -108,7 +49,7 @@ const ErrorMessage: FC<{ message: string }> = ({ message }) => (
 
 const HospitalCard: FC<{ hospital: HospitalWithMock }> = memo(({ hospital }) => {
   const distance = hospital.fields.dist 
-    ? (parseFloat(hospital.fields.dist) / 1000).toFixed(1) 
+    ? (hospital.fields.dist / 1000).toFixed(1) 
     : null;
   
   return (
@@ -336,7 +277,7 @@ export default function HopitauxPage() {
 
     if (maxDistanceKm !== null) {
       filtered = filtered.filter(hospital => {
-        const distanceM = hospital.fields.dist ? parseFloat(hospital.fields.dist) : Infinity;
+        const distanceM = hospital.fields.dist ? hospital.fields.dist as number : Infinity;
         const distanceKm = distanceM / 1000;
         return distanceKm <= maxDistanceKm;
       });

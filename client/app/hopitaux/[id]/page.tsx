@@ -8,71 +8,10 @@ import Link from 'next/link';
 import MapWrapper from '@/components/MapWrapper';
 import Attendance from '@/components/Attendance';
 import Specification from '@/components/Specification';
-
-interface HospitalDetails {
-  recordid: string;
-  fields: {
-    name: string;
-    addr_street?: string;
-    addr_postcode?: string;
-    addr_city?: string;
-    phone?: string;
-    lat?: number;
-    lon?: number;
-    website?: string;
-    email?: string;
-    emergency?: string;
-  };
-}
-
-interface AphService {
-  name: string;
-  code: string;
-  isPediatric: boolean;
-}
-
-interface AccessibilityOptions {
-  wheelchairAccessibleParking?: boolean;
-  wheelchairAccessibleEntrance?: boolean;
-  wheelchairAccessibleRestroom?: boolean;
-  wheelchairAccessibleSeating?: boolean;
-}
-
-interface PlaceDetails {
-  formattedAddress?: string;
-  accessibilityOptions: AccessibilityOptions;
-}
-
-interface Professionnal {
-  internist: boolean;
-  pmr: boolean;
-  rheumatologist: boolean;
-  cardiologist: boolean;
-  pulmonologist: boolean;
-  nephrologist: boolean;
-  gasteroenterologist: boolean;
-  endocrinologist: boolean;
-  dermatologist: boolean;
-  ent: boolean;
-  gynecologist: boolean;
-  urologist: boolean;
-  orthopedist: boolean;
-  psychologist: boolean;
-  neurosurgeon: boolean;
-  pediatric_surgeon: boolean;
-  orthopedic_surgeon: boolean;
-}
-
-interface MockHospitalData {
-  name: string;
-  place_id: string;
-  fire_fighter: boolean;
-  social_worker: boolean;
-  professionnal: Professionnal;
-}
+import type { Hospital, AccessibilityOptions, PlaceDetails, MockHospitalData, AphService } from '@/types/api';
 
 export default function HospitalDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const [hospital, setHospital] = useState<HospitalDetails | null>(null);
+  const [hospital, setHospital] = useState<Hospital | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hospitalId, setHospitalId] = useState<string | null>(null);
@@ -179,7 +118,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
             if (accessRes.ok) {
               const placeData: PlaceDetails = await accessRes.json();
               setPlaceAddress(placeData.formattedAddress || null);
-              setAccessibilityOptions(placeData.accessibilityOptions);
+              setAccessibilityOptions(placeData.accessibilityOptions ?? null);
             }
           }
         }
@@ -230,12 +169,6 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
       </>
     );
   }
-
-  const address = [
-    hospital.fields.addr_street,
-    hospital.fields.addr_postcode,
-    hospital.fields.addr_city
-  ].filter(Boolean).join(', ');
 
   return (
     <>
