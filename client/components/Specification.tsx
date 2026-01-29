@@ -3,8 +3,10 @@ import Image from "next/image";
 function Specification({ fullWidth, imagePath, description }: { fullWidth: boolean; imagePath: string; description: string }) {
     return (
         <div 
-        className={`rounded-lg bg-primary text-white p-6 shadow-md flex flex-col gap-4 items-center justify-start ${fullWidth ? 'col-span-full' : ''}`}
+        tabIndex={0}
+        role="group"
         aria-label={description}
+        className={`rounded-lg bg-primary text-white p-6 shadow-md flex flex-col gap-4 items-center justify-start focus:outline-none focus:ring-4 focus:ring-red-600 ${fullWidth ? 'col-span-full' : ''}`}
         >
             <Image
                 src={imagePath}
