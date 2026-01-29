@@ -3,43 +3,8 @@
 import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
-import type { ComponentType } from 'react'
-
-interface Hospital {
-  recordid: string
-  fields: {
-    name: string
-    phone?: string
-    dist?: string
-    meta_geo_point?: [number, number] | number[]
-    geometry?: {
-      coordinates?: [number, number] | number[]
-    }
-    lat?: number
-    lon?: number
-  } & Record<string, unknown>
-}
-
-async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_HOSPITALS_API_URL
-    const radius = process.env.NEXT_PUBLIC_SEARCH_RADIUS
-    const apiUrl = `${baseUrl}&geofilter.distance=${latitude},${longitude},${radius}`
-    
-    const res = await fetch(apiUrl, { cache: 'no-store' })
-
-    if (!res.ok) {
-      console.error(`Failed to fetch hospitals: ${res.status} ${res.statusText}`)
-      return []
-    }
-
-    const data = await res.json()
-    return data.records as Hospital[]
-  } catch (error) {
-    console.error('Error fetching hospitals:', error)
-    return []
-  }
-}
+import { getHospitals } from '@/app/api/hospitals/route'
+import type { Hospital } from '@/types/api'
 
 const extractCoordinates = (hospital: Hospital): [number, number] | null => {
   const fields = hospital.fields
@@ -612,6 +577,6 @@ const MapComponent = dynamic(() => Promise.resolve(MapContent), {
       <p className="text-gray-500">Chargement de la carte...</p>
     </div>
   )
-}) as ComponentType<MapContentProps>
+})
 
 export default MapComponent
