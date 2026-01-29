@@ -100,21 +100,6 @@ export default function HopitauxPage() {
     fetchData();
   }, []);
 
-  const distanceOptions = [
-    { value: '', label: 'Tous les hôpitaux' },
-    { value: '5', label: 'Jusqu\'à 5 km' },
-    { value: '10', label: 'Jusqu\'à 10 km' },
-    { value: '15', label: 'Jusqu\'à 15 km' },
-    { value: '20', label: 'Jusqu\'à 20 km' },
-    { value: '25', label: 'Jusqu\'à 25 km' },
-    { value: '30', label: 'Jusqu\'à 30 km' },
-    { value: '35', label: 'Jusqu\'à 35 km' },
-    { value: '40', label: 'Jusqu\'à 40 km' },
-    { value: '45', label: 'Jusqu\'à 45 km' },
-    { value: '50', label: 'Jusqu\'à 50 km' },
-    { value: '100', label: 'Jusqu\'à 100 km' }
-  ];
-
   const specificationOptions = [
     { value: 'fire_fighter', label: 'Accès pompiers' },
     { value: 'social_worker', label: 'Assistante sociale' },
@@ -217,13 +202,6 @@ export default function HopitauxPage() {
           {!loading && !error && hospitals.length > 0 && (
             <div className="mb-6">
               <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-72 -mx-4 px-4 md:px-2 md:justify-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                <MultiSelectFilter
-                  label="Distance"
-                  options={distanceOptions}
-                  selectedValues={maxDistanceKm !== null ? [String(maxDistanceKm)] : ['']}
-                  onChange={(values) => setMaxDistanceKm(values[0] ? parseInt(values[0], 10) : null)}
-                  mode="single"
-                />
                 <MultiSelectFilter
                   label="Spécifications"
                   options={specificationOptions}
