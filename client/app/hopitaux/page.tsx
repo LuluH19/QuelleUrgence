@@ -179,8 +179,7 @@ export default function HopitauxPage() {
           />
            {!loading && !error && hospitals.length > 0 && (
             <div className="mb-6 relative z-30">
-              {/* Changement ici : suppression de overflow-x-auto et ajout de flex-wrap */}
-              <div className="flex items-center justify-start gap-3 py-2">
+              <div className="flex items-center justify-start gap-3 py-2 flex-wrap">
                 <MultiSelectFilter
                   label="Spécifications"
                   options={specificationOptions}
