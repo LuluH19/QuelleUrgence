@@ -109,9 +109,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
 
       ;(container as any)._leaflet_id = null
 
-      const map = L.map(container, {
-        keyboard: false
-      }).setView(PARIS_COORDS, PARIS_FALLBACK_ZOOM)
+      const map = L.map(container).setView(PARIS_COORDS, PARIS_FALLBACK_ZOOM)
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
@@ -149,6 +147,18 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         const controlLinks = container.querySelectorAll('.leaflet-control a')
         controlLinks.forEach((link) => {
           (link as HTMLElement).setAttribute('tabindex', '-1')
+        })
+        
+        // Désactiver le focus sur les clusters de marqueurs
+        const clusterMarkers = container.querySelectorAll('.marker-cluster, .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large')
+        clusterMarkers.forEach((cluster) => {
+          (cluster as HTMLElement).setAttribute('tabindex', '-1')
+        })
+        
+        // Désactiver le focus sur tous les marqueurs Leaflet
+        const allMarkers = container.querySelectorAll('.leaflet-marker-icon')
+        allMarkers.forEach((marker) => {
+          (marker as HTMLElement).setAttribute('tabindex', '-1')
         })
       }
       
@@ -351,12 +361,22 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             
             if (!mapInstanceRef.current) return
 
-            const marker = L.marker([lat, lng], { icon: redIcon })
+            const marker = L.marker([lat, lng], { 
+              icon: redIcon
+            })
               .bindPopup(popupContent, {
                 className: 'hospital-popup',
                 closeButton: true,
                 autoClose: false,
                 closeOnClick: false,
+              })
+              .on('popupopen', () => {
+                setTimeout(() => {
+                  const closeButton = document.querySelector('.leaflet-popup-close-button') as HTMLElement
+                  if (closeButton) {
+                    closeButton.setAttribute('tabindex', '-1')
+                  }
+                }, 0)
               })
             
             const handleMouseOver = () => {
@@ -416,7 +436,8 @@ function MapContent({ fullScreen = false }: MapContentProps) {
               }
               userMarkerRef.current = L.marker(PARIS_COORDS, { 
                 icon: userIcon,
-                zIndexOffset: 1000
+                zIndexOffset: 1000,
+                keyboard: false
               })
                 .addTo(map)
                 .bindPopup('Votre position (approximative)', { closeButton: false })
@@ -433,7 +454,8 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             }
             userMarkerRef.current = L.marker([latitude, longitude], { 
               icon: userIcon,
-              zIndexOffset: 1000
+              zIndexOffset: 1000,
+              keyboard: false
             })
               .addTo(map)
               .bindPopup('Votre position', { closeButton: false })
@@ -561,13 +583,11 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         role="application"
         aria-label="Carte interactive des hôpitaux"
         aria-live="polite"
+        tabIndex={-1}
+        inert
       />
     </>
   )
-}
-
-interface MapComponentProps {
-  fullScreen?: boolean
 }
 
 const MapComponent = dynamic(() => Promise.resolve(MapContent), {

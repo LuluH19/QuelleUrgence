@@ -179,7 +179,7 @@ export default function HopitauxPage() {
           />
           {!loading && !error && hospitals.length > 0 && (
             <div className="mb-6">
-              <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-72 -mx-4 px-4 md:px-2 md:justify-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-72 position-relative z-10 -mx-4 px-4 md:px-2 md:justify-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <MultiSelectFilter
                   label="Spécifications"
                   options={specificationOptions}
