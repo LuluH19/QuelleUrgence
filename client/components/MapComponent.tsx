@@ -197,42 +197,145 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         subtree: true
       })
 
-      const createPopupHTML = (hospitalName: string, lat: number, lng: number): string => {
+      const formatDistance = (lat: number, lng: number): string | null => {
+        const userPos = userPositionRef.current
+
+        const fromUser =
+          userPos != null
+            ? (() => {
+                const R = 6371e3 // metres
+                const toRad = (deg: number) => (deg * Math.PI) / 180
+                const φ1 = toRad(userPos[0])
+                const φ2 = toRad(lat)
+                const Δφ = toRad(lat - userPos[0])
+                const Δλ = toRad(lng - userPos[1])
+
+                const a =
+                  Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                  Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+                return R * c
+              })()
+            : null
+
+        if (fromUser == null || Number.isNaN(fromUser)) return null
+
+        if (fromUser >= 1000) {
+          const km = fromUser / 1000
+          return `${km.toFixed(1)} km`
+        }
+
+        const rounded = Math.round(fromUser / 50) * 50
+        return `${rounded} m`
+      }
+
+      const getPhone = (fields: Hospital['fields']): string | null => {
+        const anyFields = fields as Record<string, unknown>
+        const phone =
+          (anyFields.phone as string | undefined) ||
+          (anyFields.telephone as string | undefined) ||
+          (anyFields.tel as string | undefined)
+        if (!phone) return null
+        return phone.trim()
+      }
+
+      const createPopupHTML = (hospital: Hospital, lat: number, lng: number): string => {
         const userPos = userPositionRef.current
         let itineraryUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
         
         if (userPos) {
           itineraryUrl += `&origin=${userPos[0]},${userPos[1]}`
         }
-        
+
+        const distanceLabel = formatDistance(lat, lng)
+        const phone = getPhone(hospital.fields)
+        const phoneHref = phone ? `tel:${phone.replace(/\s+/g, '')}` : null
+        const hospitalName = hospital.fields.name
+
         return `
-          <div style="padding: 8px; min-width: 200px;">
-            <div style="font-weight: bold; margin-bottom: 12px; font-size: 16px; color: #1f2937;">
+          <div style="
+            padding: 12px 14px;
+            min-width: 220px;
+            max-width: 260px;
+            background-color: #3C0F7D;
+            color: #FFFFFF;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+          ">
+            <div style="font-weight: 700; margin-bottom: 6px; font-size: 15px; line-height: 1.3;">
               ${hospitalName}
             </div>
-            <a 
-              href="${itineraryUrl}" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style="
-                display: inline-block;
-                background-color: #DC2626;
-                color: white;
-                padding: 8px 16px;
-                border-radius: 8px;
-                text-decoration: none;
-                font-weight: bold;
-                font-size: 14px;
-                transition: background-color 0.2s;
-                width: 100%;
-                text-align: center;
-                box-sizing: border-box;
-              "
-              onmouseover="this.style.backgroundColor='#B91C1C'"
-              onmouseout="this.style.backgroundColor='#DC2626'"
-            >
-              Itinéraire
-            </a>
+            ${
+              distanceLabel
+                ? `<div style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">
+                     ${distanceLabel}
+                   </div>`
+                : ''
+            }
+            <div style="
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 8px;
+              margin-top: 6px;
+            ">
+              ${
+                phone
+                  ? `<a
+                       href="${phoneHref}"
+                       style="
+                         display: inline-flex;
+                         align-items: center;
+                         gap: 6px;
+                         font-size: 13px;
+                         color: #FFFFFF;
+                         text-decoration: none;
+                         white-space: nowrap;
+                       "
+                     >
+                       <span style="
+                         display: inline-flex;
+                         align-items: center;
+                         justify-content: center;
+                         width: 20px;
+                         height: 20px;
+                         border-radius: 999px;
+                         background-color: rgba(255, 255, 255, 0.16);
+                       ">
+                         📞
+                       </span>
+                       <span>${phone}</span>
+                     </a>`
+                  : ''
+              }
+              <a 
+                href="${itineraryUrl}" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style="
+                  display: inline-flex;
+                  align-items: center;
+                  justify-content: center;
+                  flex: 1;
+                  background-color: #EF4444;
+                  color: #FFFFFF;
+                  padding: 6px 10px;
+                  border-radius: 999px;
+                  text-decoration: none;
+                  font-weight: 600;
+                  font-size: 13px;
+                  transition: background-color 0.15s, transform 0.1s;
+                  text-align: center;
+                  box-sizing: border-box;
+                  margin-left: auto;
+                "
+                onmouseover="this.style.backgroundColor='#B91C1C'; this.style.transform='translateY(-1px)'"
+                onmouseout="this.style.backgroundColor='#EF4444'; this.style.transform='translateY(0)'"
+              >
+                Itinéraire
+              </a>
+            </div>
           </div>
         `
       }
@@ -246,7 +349,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
           })
           
           if (marker) {
-            const newPopupContent = createPopupHTML(hospital.fields.name, lat, lng)
+            const newPopupContent = createPopupHTML(hospital, lat, lng)
             marker.setPopupContent(newPopupContent)
           }
         })
@@ -279,7 +382,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             const [lat, lng] = coords
             hospitalsDataRef.current.push({ hospital, coords })
             
-            const popupContent = createPopupHTML(hospital.fields.name, lat, lng)
+            const popupContent = createPopupHTML(hospital, lat, lng)
             
             if (!mapInstanceRef.current) return
 
