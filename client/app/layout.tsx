@@ -17,6 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body className="pb-20 md:pb-0 md:pl-64">
         {children}
         <EmergencyButton />
