@@ -44,7 +44,6 @@ async function getHospitals(latitude: number, longitude: number): Promise<Hospit
 const extractCoordinates = (hospital: Hospital): [number, number] | null => {
   const fields = hospital.fields
   
-  // Primary format: meta_geo_point (data.gouv.fr API)
   if (fields.meta_geo_point && Array.isArray(fields.meta_geo_point)) {
     const [lat, lon] = fields.meta_geo_point
     if (typeof lat === 'number' && typeof lon === 'number') {
@@ -52,7 +51,6 @@ const extractCoordinates = (hospital: Hospital): [number, number] | null => {
     }
   }
   
-  // Fallback: GeoJSON format [longitude, latitude]
   if (fields.geometry?.coordinates && Array.isArray(fields.geometry.coordinates)) {
     const [lon, lat] = fields.geometry.coordinates
     if (typeof lat === 'number' && typeof lon === 'number') {
@@ -60,7 +58,6 @@ const extractCoordinates = (hospital: Hospital): [number, number] | null => {
     }
   }
   
-  // Fallback: separate lat/lon fields
   if (fields.lat && fields.lon) {
     return [fields.lat, fields.lon]
   }
@@ -72,7 +69,6 @@ interface MapContentProps {
   fullScreen?: boolean
 }
 
-// Constants
 const PARIS_COORDS: [number, number] = [48.8566, 2.3522]
 const DEFAULT_ZOOM = 13
 const PARIS_FALLBACK_ZOOM = 12
@@ -86,6 +82,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
   const hospitalsDataRef = useRef<Array<{ hospital: Hospital; coords: [number, number] }>>([])
   const mapInitializedRef = useRef<boolean>(false)
   const markerEventHandlersRef = useRef<Map<LeafletMarker, { mouseover: () => void }>>(new Map())
+  const markerClusterGroupRef = useRef<{ addLayer: (layer: any) => void; clearLayers: () => void } | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined' || !mapRef.current) return
@@ -95,7 +92,19 @@ function MapContent({ fullScreen = false }: MapContentProps) {
     const initMap = async () => {
       if (mapInstanceRef.current) return undefined
 
-      const L = (await import('leaflet')) as typeof import('leaflet')
+      const L = (await import('leaflet')).default
+      await import('leaflet.markercluster')
+      
+      if (!L.markerClusterGroup) {
+        const MarkerClusterModule = await import('leaflet.markercluster')
+        const MarkerClusterGroup = (MarkerClusterModule as any).default?.MarkerClusterGroup || 
+                                   (MarkerClusterModule as any).MarkerClusterGroup ||
+                                   ((MarkerClusterModule as any).default && typeof (MarkerClusterModule as any).default === 'function' ? (MarkerClusterModule as any).default : null)
+        
+        if (MarkerClusterGroup) {
+          L.markerClusterGroup = (options: any) => new MarkerClusterGroup(options)
+        }
+      }
 
       delete (L.Icon.Default.prototype as any)._getIconUrl
       L.Icon.Default.mergeOptions({
@@ -107,7 +116,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
           'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
       })
 
-      // Red pin icon for hospitals
       const redIcon = L.divIcon({
         className: 'red-hospital-marker',
         html: `
@@ -121,14 +129,13 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         popupAnchor: [0, -41],
       })
 
-      // Blue user location icon
       const userIcon = L.divIcon({
         className: 'user-location-marker',
         html: `
           <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="20" cy="20" r="18" fill="#3B82F6" stroke="#FFFFFF" stroke-width="3" opacity="0.9"/>
+            <circle cx="20" cy="20" r="18" fill="#340788" stroke="#FFFFFF" stroke-width="3" opacity="0.9"/>
             <circle cx="20" cy="20" r="10" fill="#FFFFFF"/>
-            <circle cx="20" cy="20" r="5" fill="#3B82F6"/>
+            <circle cx="20" cy="20" r="5" fill="#340788"/>
           </svg>
         `,
         iconSize: [40, 40],
@@ -146,6 +153,27 @@ function MapContent({ fullScreen = false }: MapContentProps) {
       }).addTo(map)
 
       mapInstanceRef.current = map
+
+      const markerClusterGroup = L.markerClusterGroup({
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        spiderfyOnMaxZoom: true,
+        removeOutsideVisibleBounds: true,
+        animate: true,
+        maxClusterRadius: 80,
+        iconCreateFunction: (cluster: any) => {
+          const count = cluster.getChildCount()
+          
+          return L.divIcon({
+            html: `<div><span>${count}</span></div>`,
+            className: 'marker-cluster',
+            iconSize: L.point(40, 40),
+          })
+        }
+      })
+
+      map.addLayer(markerClusterGroup)
+      markerClusterGroupRef.current = markerClusterGroup
       
       const disableMapFocus = () => {
         const mapContainer = container.querySelector('.leaflet-container') as HTMLElement
@@ -169,13 +197,10 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         subtree: true
       })
 
-      // Create popup HTML with hospital name and itinerary button
       const createPopupHTML = (hospitalName: string, lat: number, lng: number): string => {
         const userPos = userPositionRef.current
-        // Only include origin if we have a valid user position (not fallback Paris)
         let itineraryUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
         
-        // Only add origin if user position is available and not the default Paris fallback
         if (userPos) {
           itineraryUrl += `&origin=${userPos[0]},${userPos[1]}`
         }
@@ -212,7 +237,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         `
       }
 
-      // Update all popups with current user position
       const updatePopups = () => {
         hospitalsDataRef.current.forEach(({ hospital, coords }) => {
           const [lat, lng] = coords
@@ -228,7 +252,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         })
       }
 
-      // Load and display hospitals on the map
       const loadHospitals = async (latitude: number, longitude: number) => {
         try {
           const hospitals = await getHospitals(latitude, longitude)
@@ -237,7 +260,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             return
           }
 
-          // Ensure map + container are ready before adding markers (Leaflet appendChild safety)
           const mapInstance = mapInstanceRef.current
           if (!mapInstance || !mapInstance.getContainer()) {
             console.error('Map container not ready')
@@ -246,10 +268,8 @@ function MapContent({ fullScreen = false }: MapContentProps) {
 
           let markersAdded = 0
           
-          // Store hospitals data for popup updates
           hospitalsDataRef.current = []
           
-          // Add red markers for each hospital
           hospitals.forEach((hospital) => {
             const coords = extractCoordinates(hospital)
             if (!coords) {
@@ -264,7 +284,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             if (!mapInstanceRef.current) return
 
             const marker = L.marker([lat, lng], { icon: redIcon })
-              .addTo(mapInstanceRef.current)
               .bindPopup(popupContent, {
                 className: 'hospital-popup',
                 closeButton: true,
@@ -272,45 +291,36 @@ function MapContent({ fullScreen = false }: MapContentProps) {
                 closeOnClick: false,
               })
             
-            // Open popup on hover - store handler for cleanup
             const handleMouseOver = () => {
               marker.openPopup()
             }
             marker.on('mouseover', handleMouseOver)
             markerEventHandlersRef.current.set(marker, { mouseover: handleMouseOver })
-            
-            // Optional: close popup on mouseout (comment out if you want it to stay open)
-            // marker.on('mouseout', () => {
-            //   marker.closePopup()
-            // })
+
+            if (markerClusterGroupRef.current) {
+              markerClusterGroupRef.current.addLayer(marker)
+            }
             
             markersRef.current.push(marker)
             markersAdded++
           })
-
-          // Don't recenter the map after hospitals load - let user control it
-          // The map is already centered on user position when geolocation succeeds
         } catch (error) {
           console.error('Error loading hospitals:', error)
         }
       }
 
-      // Custom logger to filter Chrome extension errors without overriding console.error globally
       const logError = (...args: any[]) => {
         const message = args[0]?.toString() || ''
-        // Ignore Chrome extension errors
         if (message.includes('runtime.lastError') || message.includes('Receiving end does not exist')) {
           return
         }
         console.error(...args)
       }
 
-      // Validate coordinates (accepts any valid lat/lng range)
       const isValidCoordinates = (lat: number, lng: number): boolean => {
         return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
       }
       
-      // Center map on coordinates (prevents race conditions)
       const centerMapOnCoords = (coords: [number, number], zoom: number = DEFAULT_ZOOM) => {
         if (!mapInitializedRef.current && mapInstanceRef.current) {
           mapInstanceRef.current.setView(coords, zoom)
@@ -318,7 +328,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         }
       }
 
-      // Get user location and load hospitals
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -349,27 +358,22 @@ function MapContent({ fullScreen = false }: MapContentProps) {
               return
             }
             
-            // Store user position for itinerary links (only if geolocation succeeded)
             userPositionRef.current = [latitude, longitude]
             
-            // Add user location marker
             if (userMarkerRef.current) {
               userMarkerRef.current.remove()
             }
             userMarkerRef.current = L.marker([latitude, longitude], { 
               icon: userIcon,
-              zIndexOffset: 1000 // Ensure user marker is on top
+              zIndexOffset: 1000
             })
               .addTo(map)
               .bindPopup('Votre position', { closeButton: false })
             
-            // Center map on user position only once at initialization
             centerMapOnCoords([latitude, longitude])
             
-            // Load hospitals
             await loadHospitals(latitude, longitude)
             
-            // Update popups with user position
             updatePopups()
           },
           async (error) => {
@@ -401,7 +405,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
           }
         )
       } else {
-        // Fallback to Paris if geolocation not supported
         userPositionRef.current = null
         centerMapOnCoords(PARIS_COORDS)
         await loadHospitals(PARIS_COORDS[0], PARIS_COORDS[1])
@@ -418,13 +421,16 @@ function MapContent({ fullScreen = false }: MapContentProps) {
     })
 
     return () => {
-      // Cleanup marker event listeners
       markerEventHandlersRef.current.forEach((handlers, marker) => {
         marker.off('mouseover', handlers.mouseover)
       })
       markerEventHandlersRef.current.clear()
       
-      // Remove markers
+      if (markerClusterGroupRef.current) {
+        markerClusterGroupRef.current.clearLayers()
+        markerClusterGroupRef.current = null
+      }
+      
       markersRef.current.forEach(marker => marker.remove())
       markersRef.current = []
       
@@ -457,6 +463,30 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         crossOrigin=""
       />
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"
+        crossOrigin=""
+      />
+      <style jsx global>{`
+        .marker-cluster {
+          background-color: rgba(52, 7, 136, 0.6);
+        }
+        .marker-cluster div {
+          width: 30px;
+          height: 30px;
+          margin-left: 5px;
+          margin-top: 5px;
+          text-align: center;
+          border-radius: 15px;
+          font-weight: bold;
+          color: white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: rgba(52, 7, 136, 0.8);
+        }
+      `}</style>
       <div
         ref={mapRef}
         className={mapClasses}
