@@ -10,6 +10,7 @@ import ErrorMessage from '@/components/ErrorMessage';
 import MapWrapper from '@/components/MapWrapper';
 import Attendance from '@/components/Attendance';
 import Specification from '@/components/Specification';
+import NotFoundData from '@/components/NotFoundData';
 import type { Hospital, AccessibilityOptions, PlaceDetails, MockHospitalData, AphService } from '@/types/api';
 
 export default function HospitalDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -238,49 +239,51 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           </button>
         </section>
 
-        {matchingServices.length > 0 && (
-          <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="affluence-heading">
-            <h2 id="affluence-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Affluence en temps réel</h2>
-            
-            {matchingServices.length === 1 && selectedCode && (
-              <div className="w-full max-w-4xl">
-                <Attendance hospitalCode={selectedCode} />
-              </div>
-            )}
+        <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="affluence-heading">
+          <h2 id="affluence-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Affluence en temps réel</h2>
+          
+          {matchingServices.length === 1 && selectedCode && (
+            <div className="w-full max-w-4xl">
+              <Attendance hospitalCode={selectedCode} />
+            </div>
+          )}
 
-            {matchingServices.length > 1 && (
-              <div className="w-full max-w-4xl space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Choisissez un service pour voir l'affluence">
-                  {matchingServices.map(service => (
-                    <button
-                      key={service.code}
-                      onClick={() => setSelectedCode(service.code)}
-                      className={`px-6 py-4 rounded-lg font-bold text-lg transition-all focus:outline-none focus:ring-4 focus:ring-red-600 ${
-                        selectedCode === service.code
-                          ? 'bg-primary text-white shadow-lg scale-105'
-                          : 'bg-white text-primary border-primary border-2 hover:border-primary hover:bg-primary hover:text-white'
-                      }`}
-                      aria-pressed={selectedCode === service.code}
-                      aria-controls={`attendance-${service.code}`}
-                    >
-                      {service.isPediatric ? '👶 Service Pédiatrique' : '👨‍⚕️ Service Adultes'}
-                    </button>
-                  ))}
-                </div>
-
-                {selectedCode && (
-                  <div
-                    id={`attendance-${selectedCode}`}
-                    role="region"
-                    aria-label={`Affluence pour le service ${matchingServices.find(s => s.code === selectedCode)?.isPediatric ? 'pédiatrique' : 'adultes'}`}
+          {matchingServices.length > 1 && (
+            <div className="w-full max-w-4xl space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="group" aria-label="Choisissez un service pour voir l'affluence">
+                {matchingServices.map(service => (
+                  <button
+                    key={service.code}
+                    onClick={() => setSelectedCode(service.code)}
+                    className={`px-6 py-4 rounded-lg font-bold text-lg transition-all focus:outline-none focus:ring-4 focus:ring-red-600 ${
+                      selectedCode === service.code
+                        ? 'bg-primary text-white shadow-lg scale-105'
+                        : 'bg-white text-primary border-primary border-2 hover:border-primary hover:bg-primary hover:text-white'
+                    }`}
+                    aria-pressed={selectedCode === service.code}
+                    aria-controls={`attendance-${service.code}`}
                   >
-                    <Attendance hospitalCode={selectedCode} />
-                  </div>
-                )}
+                    {service.isPediatric ? '👶 Service Pédiatrique' : '👨‍⚕️ Service Adultes'}
+                  </button>
+                ))}
               </div>
-            )}
-          </section>
-        )}
+
+              {selectedCode && (
+                <div
+                  id={`attendance-${selectedCode}`}
+                  role="region"
+                  aria-label={`Affluence pour le service ${matchingServices.find(s => s.code === selectedCode)?.isPediatric ? 'pédiatrique' : 'adultes'}`}
+                >
+                  <Attendance hospitalCode={selectedCode} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {matchingServices.length === 0 && (
+            <NotFoundData message="Le traffic en temps réel n&apos;est pas encore disponible pour ce site." />
+          )}
+        </section>
 
         <section className='py-6 px-4 flex flex-col gap-4' aria-labelledby="characteristics-heading">
           <h2 id="characteristics-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Spécifications</h2>

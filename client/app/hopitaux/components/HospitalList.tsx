@@ -1,12 +1,11 @@
 import HospitalCard from "./HospitalCard";
 import { HospitalWithMock } from "@/types/api";
+import NotFoundData from "@/components/NotFoundData";
 
 function HospitalList({ hospitals }: { hospitals: HospitalWithMock[] }) {
     if (hospitals.length === 0) {
         return (
-          <div className="p-8 text-center bg-white rounded-lg shadow" role="status">
-            <p className="text-slate-600 text-lg">Aucun hôpital trouvé à proximité.</p>
-          </div>
+          <NotFoundData message="Aucun hôpital trouvé à proximité." />
         );
     }
 
