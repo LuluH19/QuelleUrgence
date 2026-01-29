@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 
-// Interface pour correspondre à la structure des données de l'API
-interface ApiHospital {
-  institutionCode: string;
-  institutionName: string;
-  institutionEnfant: boolean;
-  // L'API peut contenir d'autres champs que nous ignorons
+// Interface pour correspondre à la structure des données OpenDataSoft
+interface ApiHospitalRecord {
+  recordid: string;
+  fields: {
+    name: string;
+    [key: string]: any;
+  };
+}
+
+interface ApiResponse {
+  records: ApiHospitalRecord[];
 }
 
 export async function GET() {
@@ -37,13 +42,19 @@ export async function GET() {
       throw new Error(`Failed to fetch from APHP API: ${response.statusText}`);
     }
 
-    const hospitals: ApiHospital[] = await response.json();
+    const data: ApiResponse = await response.json();
+
+    // Vérifier que records existe et est un tableau
+    if (!data.records || !Array.isArray(data.records)) {
+      console.error('Invalid API response structure:', data);
+      throw new Error('Invalid API response: records array not found');
+    }
 
     // Transformer les données pour inclure le type de service (adulte/enfant)
-    const simplifiedHospitals = hospitals.map(h => ({
-      name: h.institutionName.toUpperCase(),
-      code: h.institutionCode,
-      isPediatric: h.institutionEnfant,
+    const simplifiedHospitals = data.records.map(record => ({
+      name: record.fields.name?.toUpperCase() || '',
+      code: record.recordid,
+      isPediatric: false, // OpenDataSoft n'a pas ce champ, on met false par défaut
     }));
 
     return NextResponse.json(simplifiedHospitals);

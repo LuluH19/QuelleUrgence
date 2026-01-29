@@ -50,13 +50,13 @@ export default function Header() {
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
                     isActive('/map') || isHovered('/map')
-                      ? 'bg-black rounded-full' 
+                      ? 'bg-black rounded-[35px]' 
                       : ''
                   }`}
                 >
                     <Image 
                         src={(isActive('/map') || isHovered('/map')) ? "/images/icons/map-white.svg" : "/images/icons/map-black.svg"}
-                        alt="" 
+                        alt="Icone de carte" 
                         width={100} 
                         height={100} 
                         className="w-10 h-10"

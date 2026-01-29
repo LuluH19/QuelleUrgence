@@ -11,6 +11,10 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
   )
 })
 
-export default function MapWrapper() {
-  return <MapComponent />
+interface MapWrapperProps {
+  fullScreen?: boolean
+}
+
+export default function MapWrapper({ fullScreen = false }: MapWrapperProps) {
+  return <MapComponent fullScreen={fullScreen} />
 }

@@ -85,9 +85,19 @@ export default function HopitauxPage() {
             setHospitals(hospitalsWithMock);
             setLoading(false);
           },
-          (geoError) => {
+          async (geoError) => {
+            if (geoError.code === 1) {
+              console.warn("🚫 Géolocalisation refusée - utilisation de Paris par défaut");
+              const parisHospitals = await getHospitals(48.8566, 2.3522);
+              setHospitals(parisHospitals);
+              setLoading(false);
+              return;
+            }
+
             console.error("Erreur de géolocalisation : ", geoError);
-            setError("Impossible d'obtenir votre position. Veuillez autoriser la géolocalisation.");
+            setError("Impossible d'obtenir votre position. Affichage des hôpitaux de Paris.");
+            const parisHospitals = await getHospitals(48.8566, 2.3522);
+            setHospitals(parisHospitals);
             setLoading(false);
           }
         );
