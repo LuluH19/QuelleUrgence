@@ -137,7 +137,7 @@ export default function Attendance({ hospitalCode }: { hospitalCode: string }) {
           patients={waitingForDoctorPatients as number}
         />
         <StatCard
-          title="Temps avant de quitter le service"
+          title="Temps total passé à l'hopital"
           time={totalTime as number}
           patients={totalPatientsInER as number}
         />
