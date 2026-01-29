@@ -1,16 +1,11 @@
 import { NextResponse } from 'next/server';
+import { Hospital } from '@/types/api';
 
-// Interface pour correspondre à la structure des données OpenDataSoft
-interface ApiHospitalRecord {
-  recordid: string;
-  fields: {
-    name: string;
-    [key: string]: any;
-  };
-}
-
-interface ApiResponse {
-  records: ApiHospitalRecord[];
+interface ApiHospital {
+  institutionCode: string;
+  institutionName: string;
+  institutionEnfant: boolean;
+  // L'API peut contenir d'autres champs que nous ignorons
 }
 
 export async function GET() {
@@ -42,19 +37,13 @@ export async function GET() {
       throw new Error(`Failed to fetch from APHP API: ${response.statusText}`);
     }
 
-    const data: ApiResponse = await response.json();
-
-    // Vérifier que records existe et est un tableau
-    if (!data.records || !Array.isArray(data.records)) {
-      console.error('Invalid API response structure:', data);
-      throw new Error('Invalid API response: records array not found');
-    }
+    const data: ApiHospital[] = await response.json();
 
     // Transformer les données pour inclure le type de service (adulte/enfant)
-    const simplifiedHospitals = data.records.map(record => ({
-      name: record.fields.name?.toUpperCase() || '',
-      code: record.recordid,
-      isPediatric: false, // OpenDataSoft n'a pas ce champ, on met false par défaut
+    const simplifiedHospitals = data.map(hospital => ({
+      name: hospital.institutionName?.toUpperCase() || '',
+      code: hospital.institutionCode,
+      isPediatric: hospital.institutionEnfant,
     }));
 
     return NextResponse.json(simplifiedHospitals);
@@ -68,5 +57,27 @@ export async function GET() {
       },
       { status: 500 }
     );
+  }
+}
+
+export async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_HOSPITALS_API_URL;
+    const radius = process.env.NEXT_PUBLIC_SEARCH_RADIUS;
+    const apiUrl = `${baseUrl}&geofilter.distance=${latitude},${longitude},${radius}`;
+    
+    const res = await fetch(apiUrl, { cache: 'no-store' });
+
+    if (!res.ok) {
+      const errorDetails = await res.text();
+      console.error(`Erreur API: ${res.status} ${res.statusText}`, errorDetails);
+      throw new Error('Échec de la récupération des données des hôpitaux');
+    }
+
+    const data = await res.json();
+    return data.records as Hospital[];
+  } catch (error) {
+    console.error(error);
+    return [];
   }
 }
