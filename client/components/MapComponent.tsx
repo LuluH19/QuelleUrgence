@@ -17,8 +17,7 @@ interface Hospital {
     }
     lat?: number
     lon?: number
-    [key: string]: any
-  }
+  } & Record<string, unknown>
 }
 
 async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
@@ -30,13 +29,14 @@ async function getHospitals(latitude: number, longitude: number): Promise<Hospit
     const res = await fetch(apiUrl, { cache: 'no-store' })
 
     if (!res.ok) {
+      console.error(`Failed to fetch hospitals: ${res.status} ${res.statusText}`)
       return []
     }
 
     const data = await res.json()
     return data.records as Hospital[]
   } catch (error) {
-    console.error(error)
+    console.error('Error fetching hospitals:', error)
     return []
   }
 }
@@ -72,6 +72,11 @@ interface MapContentProps {
   fullScreen?: boolean
 }
 
+// Constants
+const PARIS_COORDS: [number, number] = [48.8566, 2.3522]
+const DEFAULT_ZOOM = 13
+const PARIS_FALLBACK_ZOOM = 12
+
 function MapContent({ fullScreen = false }: MapContentProps) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<LeafletMap | null>(null)
@@ -80,6 +85,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
   const userPositionRef = useRef<[number, number] | null>(null)
   const hospitalsDataRef = useRef<Array<{ hospital: Hospital; coords: [number, number] }>>([])
   const mapInitializedRef = useRef<boolean>(false)
+  const markerEventHandlersRef = useRef<Map<LeafletMarker, { mouseover: () => void }>>(new Map())
 
   useEffect(() => {
     if (typeof window === 'undefined' || !mapRef.current) return
@@ -89,7 +95,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
     const initMap = async () => {
       if (mapInstanceRef.current) return undefined
 
-      const L = (await import('leaflet')).default
+      const L = (await import('leaflet')) as typeof import('leaflet')
 
       delete (L.Icon.Default.prototype as any)._getIconUrl
       L.Icon.Default.mergeOptions({
@@ -133,7 +139,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
 
       const map = L.map(container, {
         keyboard: false
-      }).setView([48.8566, 2.3522], 12)
+      }).setView(PARIS_COORDS, PARIS_FALLBACK_ZOOM)
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
@@ -153,8 +159,9 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         })
       }
       
-      setTimeout(disableMapFocus, 100)
-      setTimeout(disableMapFocus, 500)
+      const timers: NodeJS.Timeout[] = []
+      timers.push(setTimeout(disableMapFocus, 100))
+      timers.push(setTimeout(disableMapFocus, 500))
       
       const observer = new MutationObserver(disableMapFocus)
       observer.observe(container, {
@@ -265,10 +272,12 @@ function MapContent({ fullScreen = false }: MapContentProps) {
                 closeOnClick: false,
               })
             
-            // Open popup on hover
-            marker.on('mouseover', () => {
+            // Open popup on hover - store handler for cleanup
+            const handleMouseOver = () => {
               marker.openPopup()
-            })
+            }
+            marker.on('mouseover', handleMouseOver)
+            markerEventHandlersRef.current.set(marker, { mouseover: handleMouseOver })
             
             // Optional: close popup on mouseout (comment out if you want it to stay open)
             // marker.on('mouseout', () => {
@@ -286,21 +295,27 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         }
       }
 
-      // Filter out Chrome extension errors from console
-      const originalError = console.error
-      console.error = (...args: any[]) => {
+      // Custom logger to filter Chrome extension errors without overriding console.error globally
+      const logError = (...args: any[]) => {
         const message = args[0]?.toString() || ''
         // Ignore Chrome extension errors
         if (message.includes('runtime.lastError') || message.includes('Receiving end does not exist')) {
           return
         }
-        originalError.apply(console, args)
+        console.error(...args)
       }
 
-      // Validate coordinates (basic sanity check for France)
+      // Validate coordinates (accepts any valid lat/lng range)
       const isValidCoordinates = (lat: number, lng: number): boolean => {
-        // France is roughly between 41°N and 51°N, and 5°W and 8°E
-        return lat >= 41 && lat <= 51 && lng >= -5 && lng <= 8
+        return lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180
+      }
+      
+      // Center map on coordinates (prevents race conditions)
+      const centerMapOnCoords = (coords: [number, number], zoom: number = DEFAULT_ZOOM) => {
+        if (!mapInitializedRef.current && mapInstanceRef.current) {
+          mapInstanceRef.current.setView(coords, zoom)
+          mapInitializedRef.current = true
+        }
       }
 
       // Get user location and load hospitals
@@ -314,27 +329,23 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             
             // Validate coordinates before using them
             if (!isValidCoordinates(latitude, longitude)) {
-              console.warn('Invalid coordinates detected, using Paris as fallback:', latitude, longitude)
+              logError('Invalid coordinates detected, using Paris as fallback:', latitude, longitude)
               // Use Paris coordinates instead
-              userPositionRef.current = [48.8566, 2.3522]
+              userPositionRef.current = PARIS_COORDS
               
               // Add user location marker at Paris
               if (userMarkerRef.current) {
                 userMarkerRef.current.remove()
               }
-              userMarkerRef.current = L.marker([48.8566, 2.3522], { 
+              userMarkerRef.current = L.marker(PARIS_COORDS, { 
                 icon: userIcon,
                 zIndexOffset: 1000
               })
                 .addTo(map)
                 .bindPopup('Votre position (approximative)', { closeButton: false })
               
-              if (!mapInitializedRef.current) {
-                map.setView([48.8566, 2.3522], 13)
-                mapInitializedRef.current = true
-              }
-              
-              await loadHospitals(48.8566, 2.3522)
+              centerMapOnCoords(PARIS_COORDS)
+              await loadHospitals(PARIS_COORDS[0], PARIS_COORDS[1])
               return
             }
             
@@ -353,10 +364,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
               .bindPopup('Votre position', { closeButton: false })
             
             // Center map on user position only once at initialization
-            if (!mapInitializedRef.current) {
-              map.setView([latitude, longitude], 13)
-              mapInitializedRef.current = true
-            }
+            centerMapOnCoords([latitude, longitude])
             
             // Load hospitals
             await loadHospitals(latitude, longitude)
@@ -365,6 +373,8 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             updatePopups()
           },
           async (error) => {
+            logError('❌ MapComponent - Erreur:', error.code, error.message)
+
             if (error.code === 1) {
               console.warn("🚫 Géolocalisation refusée par l'utilisateur")
             } else if (error.code === 2) {
@@ -372,7 +382,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             } else if (error.code === 3) {
               console.warn('⏱️ Timeout de géolocalisation')
             } else {
-              console.error("Geolocation error:", error)
+              logError("Geolocation error:", error)
             }
 
             // Don't set userPositionRef if geolocation failed or was denied
@@ -380,13 +390,10 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             userPositionRef.current = null
             
             // Ensure the map is initialized before fallback
-            if (!mapInitializedRef.current && mapInstanceRef.current) {
-              mapInstanceRef.current.setView([48.8566, 2.3522], 13)
-              mapInitializedRef.current = true
-            }
+            centerMapOnCoords(PARIS_COORDS)
 
             // Fallback to Paris for loading hospitals
-            await loadHospitals(48.8566, 2.3522)
+            await loadHospitals(PARIS_COORDS[0], PARIS_COORDS[1])
           },
           {
             timeout: 10000,
@@ -396,22 +403,31 @@ function MapContent({ fullScreen = false }: MapContentProps) {
       } else {
         // Fallback to Paris if geolocation not supported
         userPositionRef.current = null
-        await loadHospitals(48.8566, 2.3522)
+        centerMapOnCoords(PARIS_COORDS)
+        await loadHospitals(PARIS_COORDS[0], PARIS_COORDS[1])
       }
       
-      // Retourner la fonction de nettoyage de l'observer
-      return observer
+      // Retourner les ressources à nettoyer
+      return { observer, timers }
     }
 
-    let observer: MutationObserver | undefined
+    let cleanupResources: { observer?: MutationObserver; timers?: NodeJS.Timeout[] } | undefined
     
-    initMap().then((obs) => {
-      observer = obs
+    initMap().then((resources) => {
+      cleanupResources = resources
     })
 
     return () => {
+      // Cleanup marker event listeners
+      markerEventHandlersRef.current.forEach((handlers, marker) => {
+        marker.off('mouseover', handlers.mouseover)
+      })
+      markerEventHandlersRef.current.clear()
+      
+      // Remove markers
       markersRef.current.forEach(marker => marker.remove())
       markersRef.current = []
+      
       if (userMarkerRef.current) {
         userMarkerRef.current.remove()
         userMarkerRef.current = null
@@ -420,7 +436,12 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
       }
-      if (observer) observer.disconnect()
+      if (cleanupResources?.observer) {
+        cleanupResources.observer.disconnect()
+      }
+      if (cleanupResources?.timers) {
+        cleanupResources.timers.forEach(timer => clearTimeout(timer))
+      }
     }
   }, [])
 
@@ -439,7 +460,9 @@ function MapContent({ fullScreen = false }: MapContentProps) {
       <div
         ref={mapRef}
         className={mapClasses}
+        role="application"
         aria-label="Carte interactive des hôpitaux"
+        aria-live="polite"
       />
     </>
   )
