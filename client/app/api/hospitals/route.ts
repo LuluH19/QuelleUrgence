@@ -1,19 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Hospital } from '@/types/api';
 
-// Interface pour correspondre à la structure des données OpenDataSoft
-interface ApiHospitalRecord {
-  recordid: string;
-  fields: {
-    name: string;
-    [key: string]: any;
-  };
-}
-
-interface ApiResponse {
-  records: ApiHospitalRecord[];
-}
-
 interface ApiHospital {
   institutionCode: string;
   institutionName: string;
