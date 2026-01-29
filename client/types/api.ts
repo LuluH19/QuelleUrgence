@@ -44,6 +44,10 @@ interface MockHospitalData {
     professionnal: Professionnal;
 }
 
+interface MockData {
+    hospitals: MockHospitalData[];
+}
+
 interface AccessibilityOptions {
     wheelchairAccessibleParking?: boolean;
     wheelchairAccessibleEntrance?: boolean;
@@ -68,4 +72,4 @@ interface AphService {
     isPediatric: boolean;
 }
 
-export type { Hospital, Professionnal, AccessibilityOptions, PlaceDetails, MockHospitalData, HospitalWithMock, AphService };
+export type { Hospital, Professionnal, AccessibilityOptions, PlaceDetails, MockData, MockHospitalData, HospitalWithMock, AphService };
