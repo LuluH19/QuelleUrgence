@@ -1,38 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
+import { MockData } from '@/types/api';
 import path from 'path';
-
-interface Professionnal {
-  internist: boolean;
-  pmr: boolean;
-  rheumatologist: boolean;
-  cardiologist: boolean;
-  pulmonologist: boolean;
-  nephrologist: boolean;
-  gasteroenterologist: boolean;
-  endocrinologist: boolean;
-  dermatologist: boolean;
-  ent: boolean;
-  gynecologist: boolean;
-  urologist: boolean;
-  orthopedist: boolean;
-  psychologist: boolean;
-  neurosurgeon: boolean;
-  pediatric_surgeon: boolean;
-  orthopedic_surgeon: boolean;
-}
-
-interface MockHospital {
-  name: string;
-  place_id: string;
-  fire_fighter: boolean;
-  social_worker: boolean;
-  professionnal: Professionnal;
-}
-
-interface MockData {
-  hospitals: MockHospital[];
-}
 
 function normalizeName(name: string): string {
   return name

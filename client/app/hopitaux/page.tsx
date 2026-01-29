@@ -1,72 +1,14 @@
 "use client";
 
-import { useState, useEffect, FC, memo, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Header from '@/components/Header';
-import Image from 'next/image';
-import Link from 'next/link';
+import HospitalList from './components/HospitalList';
 import SearchBar from '@/components/SearchBar';
 import MultiSelectFilter from '@/components/MultiSelectFilter';
-
+import Loading from '@/components/Loading';
+import ErrorMessage from '@/components/ErrorMessage';
+import type { Hospital, Professionnal, PlaceDetails, MockHospitalData, HospitalWithMock } from '@/types/api';
 export const dynamic = 'force-dynamic';
-
-// --- Types Definition ---
-
-interface Hospital {
-  recordid: string;
-  fields: {
-    name: string;
-    phone?: string;
-    dist?: string;
-  };
-}
-
-interface Professionnal {
-  internist: boolean;
-  pmr: boolean;
-  rheumatologist: boolean;
-  cardiologist: boolean;
-  pulmonologist: boolean;
-  nephrologist: boolean;
-  gasteroenterologist: boolean;
-  endocrinologist: boolean;
-  dermatologist: boolean;
-  ent: boolean;
-  gynecologist: boolean;
-  urologist: boolean;
-  orthopedist: boolean;
-  psychologist: boolean;
-  neurosurgeon: boolean;
-  pediatric_surgeon: boolean;
-  orthopedic_surgeon: boolean;
-}
-
-interface AccessibilityOptions {
-  wheelchairAccessibleParking?: boolean;
-  wheelchairAccessibleEntrance?: boolean;
-  wheelchairAccessibleRestroom?: boolean;
-  wheelchairAccessibleSeating?: boolean;
-}
-
-interface PlaceDetails {
-  formattedAddress?: string;
-  accessibilityOptions: AccessibilityOptions;
-}
-
-interface MockHospitalData {
-  name: string;
-  place_id: string;
-  fire_fighter: boolean;
-  social_worker: boolean;
-  professionnal: Professionnal;
-}
-
-interface HospitalWithMock extends Hospital {
-  mockData?: MockHospitalData;
-  placeAddress?: string;
-  accessibilityOptions?: AccessibilityOptions;
-}
-
-// --- API Fetching Functions ---
 
 async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
   try {
@@ -89,93 +31,6 @@ async function getHospitals(latitude: number, longitude: number): Promise<Hospit
     return [];
   }
 }
-
-// --- UI Components ---
-
-const LoadingSpinner: FC = () => (
-  <div className="p-8 text-center" role="status" aria-live="polite">
-    <div className="inline-block w-10 h-10 border-4 border-slate-200 border-t-primary rounded-full animate-spin" aria-hidden="true"></div>
-    <p className="mt-4 text-black font-medium">Localisation en cours...</p>
-    <span className="sr-only">Chargement des hôpitaux à proximité</span>
-  </div>
-);
-
-const ErrorMessage: FC<{ message: string }> = ({ message }) => (
-  <div className="p-4 bg-rose-50 border-rose-300 border rounded-lg" role="alert" aria-live="assertive">
-    <p className="text-rose-700 font-medium">⚠️ {message}</p>
-  </div>
-);
-
-const HospitalCard: FC<{ hospital: HospitalWithMock }> = memo(({ hospital }) => {
-  const distance = hospital.fields.dist 
-    ? (parseFloat(hospital.fields.dist) / 1000).toFixed(1) 
-    : null;
-  
-  return (
-    <article 
-      className="p-4 bg-primary rounded-lg shadow-md hover:shadow-lg transition-shadow focus-within:ring-4 focus-within:ring-red-600"
-      role="listitem"
-      aria-label={`Hôpital ${hospital.fields.name}`}
-    >
-      <div className="flex items-start justify-between gap-3 mb-3">
-        <p className="font-bold text-white flex-1 text-lg">
-        <Link 
-        href={`/hopitaux/${hospital.recordid}`}
-        aria-label={`Voir les détails de ${hospital.fields.name}`}
-        >
-          {hospital.fields.name}
-        </Link>
-        </p>
-        {distance && (
-          <span className="flex-shrink-0 font-bold py-2 px-4 rounded-full text-black bg-white text-sm" aria-label={`Distance: ${distance} kilomètres`}>
-            {distance} km
-          </span>
-        )}
-      </div>
-
-      {hospital.fields.phone && (
-        <a 
-          href={`tel:${hospital.fields.phone}`} 
-          className="flex items-center gap-2 w-fit mt-3 focus:outline-none focus:ring-4 focus:ring-red-600 rounded px-2 py-1 -ml-2 hover:bg-black/10 transition-colors"
-          aria-label={`Appeler ${hospital.fields.name} au ${hospital.fields.phone}`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Image 
-            src="/images/icons/phone-white.svg" 
-            alt=""
-            width={20} 
-            height={20}  
-            quality={100}
-            aria-hidden="true"
-          />
-          <span className="text-white font-bold underline">{hospital.fields.phone}</span>
-        </a>
-      )}
-      {!hospital.fields.phone && (
-        <p className="text-white/70 text-sm italic">Aucun numéro de téléphone disponible</p>
-      )}
-    </article>
-  );
-});
-HospitalCard.displayName = 'HospitalCard';
-
-const HospitalList: FC<{ hospitals: HospitalWithMock[] }> = ({ hospitals }) => {
-  if (hospitals.length === 0) {
-    return (
-      <div className="p-8 text-center bg-white rounded-lg shadow" role="status">
-        <p className="text-slate-600 text-lg">Aucun hôpital trouvé à proximité.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3" role="list" aria-label="Liste des hôpitaux avec services d'urgence">
-      {hospitals.map(hospital => (
-        <HospitalCard key={hospital.recordid} hospital={hospital} />
-      ))}
-    </div>
-  );
-};
 
 // --- Main Page Component ---
 
@@ -244,21 +99,6 @@ export default function HopitauxPage() {
 
     fetchData();
   }, []);
-
-  const distanceOptions = [
-    { value: '', label: 'Tous les hôpitaux' },
-    { value: '5', label: 'Jusqu\'à 5 km' },
-    { value: '10', label: 'Jusqu\'à 10 km' },
-    { value: '15', label: 'Jusqu\'à 15 km' },
-    { value: '20', label: 'Jusqu\'à 20 km' },
-    { value: '25', label: 'Jusqu\'à 25 km' },
-    { value: '30', label: 'Jusqu\'à 30 km' },
-    { value: '35', label: 'Jusqu\'à 35 km' },
-    { value: '40', label: 'Jusqu\'à 40 km' },
-    { value: '45', label: 'Jusqu\'à 45 km' },
-    { value: '50', label: 'Jusqu\'à 50 km' },
-    { value: '100', label: 'Jusqu\'à 100 km' }
-  ];
 
   const specificationOptions = [
     { value: 'fire_fighter', label: 'Accès pompiers' },
@@ -336,7 +176,7 @@ export default function HopitauxPage() {
 
     if (maxDistanceKm !== null) {
       filtered = filtered.filter(hospital => {
-        const distanceM = hospital.fields.dist ? parseFloat(hospital.fields.dist) : Infinity;
+        const distanceM = hospital.fields.dist ? hospital.fields.dist as number : Infinity;
         const distanceKm = distanceM / 1000;
         return distanceKm <= maxDistanceKm;
       });
@@ -363,13 +203,6 @@ export default function HopitauxPage() {
             <div className="mb-6">
               <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-72 -mx-4 px-4 md:px-2 md:justify-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 <MultiSelectFilter
-                  label="Distance"
-                  options={distanceOptions}
-                  selectedValues={maxDistanceKm !== null ? [String(maxDistanceKm)] : ['']}
-                  onChange={(values) => setMaxDistanceKm(values[0] ? parseInt(values[0], 10) : null)}
-                  mode="single"
-                />
-                <MultiSelectFilter
                   label="Spécifications"
                   options={specificationOptions}
                   selectedValues={selectedSpecifications}
@@ -388,7 +221,7 @@ export default function HopitauxPage() {
             </div>
           )}
 
-          {loading && <LoadingSpinner />}
+          {loading && <Loading message="Localisation en cours..." ariaLabel="Chargement des hôpitaux à proximité" />}
           {error && <ErrorMessage message={error} />}
           {!loading && !error && (
             <HospitalList hospitals={filteredHospitals} />
