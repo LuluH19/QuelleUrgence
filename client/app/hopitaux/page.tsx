@@ -6,6 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import SearchBar from '@/components/SearchBar';
 import MultiSelectFilter from '@/components/MultiSelectFilter';
+import Loading from '@/components/Loading';
+import ErrorMessage from '@/components/ErrorMessage';
 import type { Hospital, Professionnal, PlaceDetails, MockHospitalData, HospitalWithMock } from '@/types/api';
 export const dynamic = 'force-dynamic';
 
@@ -32,20 +34,6 @@ async function getHospitals(latitude: number, longitude: number): Promise<Hospit
 }
 
 // --- UI Components ---
-
-const LoadingSpinner: FC = () => (
-  <div className="p-8 text-center" role="status" aria-live="polite">
-    <div className="inline-block w-10 h-10 border-4 border-slate-200 border-t-primary rounded-full animate-spin" aria-hidden="true"></div>
-    <p className="mt-4 text-black font-medium">Localisation en cours...</p>
-    <span className="sr-only">Chargement des hôpitaux à proximité</span>
-  </div>
-);
-
-const ErrorMessage: FC<{ message: string }> = ({ message }) => (
-  <div className="p-4 bg-rose-50 border-rose-300 border rounded-lg" role="alert" aria-live="assertive">
-    <p className="text-rose-700 font-medium">⚠️ {message}</p>
-  </div>
-);
 
 const HospitalCard: FC<{ hospital: HospitalWithMock }> = memo(({ hospital }) => {
   const distance = hospital.fields.dist 
@@ -329,7 +317,7 @@ export default function HopitauxPage() {
             </div>
           )}
 
-          {loading && <LoadingSpinner />}
+          {loading && <Loading message="Localisation en cours..." ariaLabel="Chargement des hôpitaux à proximité" />}
           {error && <ErrorMessage message={error} />}
           {!loading && !error && (
             <HospitalList hospitals={filteredHospitals} />
