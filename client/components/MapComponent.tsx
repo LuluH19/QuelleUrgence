@@ -3,27 +3,8 @@
 import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
+import { getHospitals } from '@/app/api/hospitals/route'
 import type { Hospital } from '@/types/api'
-
-async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_HOSPITALS_API_URL
-    const radius = process.env.NEXT_PUBLIC_SEARCH_RADIUS
-    const apiUrl = `${baseUrl}&geofilter.distance=${latitude},${longitude},${radius}`
-    
-    const res = await fetch(apiUrl, { cache: 'no-store' })
-
-    if (!res.ok) {
-      return []
-    }
-
-    const data = await res.json()
-    return data.records as Hospital[]
-  } catch (error) {
-    console.error(error)
-    return []
-  }
-}
 
 const extractCoordinates = (hospital: Hospital): [number, number] | null => {
   const fields = hospital.fields

@@ -7,39 +7,15 @@ import SearchBar from '@/components/SearchBar';
 import MultiSelectFilter from '@/components/MultiSelectFilter';
 import Loading from '@/components/Loading';
 import ErrorMessage from '@/components/ErrorMessage';
-import type { Hospital, Professionnal, PlaceDetails, MockHospitalData, HospitalWithMock } from '@/types/api';
+import { getHospitals } from '@/app/api/hospitals/route';
+import type { Professionnal, PlaceDetails, MockHospitalData, HospitalWithMock } from '@/types/api';
 export const dynamic = 'force-dynamic';
-
-async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
-  try {
-    const baseUrl = process.env.NEXT_PUBLIC_HOSPITALS_API_URL;
-    const radius = process.env.NEXT_PUBLIC_SEARCH_RADIUS;
-    const apiUrl = `${baseUrl}&geofilter.distance=${latitude},${longitude},${radius}`;
-    
-    const res = await fetch(apiUrl, { cache: 'no-store' });
-
-    if (!res.ok) {
-      const errorDetails = await res.text();
-      console.error(`Erreur API: ${res.status} ${res.statusText}`, errorDetails);
-      throw new Error('Échec de la récupération des données des hôpitaux');
-    }
-
-    const data = await res.json();
-    return data.records as Hospital[];
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-}
-
-// --- Main Page Component ---
 
 export default function HopitauxPage() {
   const [hospitals, setHospitals] = useState<HospitalWithMock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [maxDistanceKm, setMaxDistanceKm] = useState<number | null>(null);
   const [selectedSpecifications, setSelectedSpecifications] = useState<string[]>([]);
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
 
@@ -174,16 +150,8 @@ export default function HopitauxPage() {
       });
     }
 
-    if (maxDistanceKm !== null) {
-      filtered = filtered.filter(hospital => {
-        const distanceM = hospital.fields.dist ? hospital.fields.dist as number : Infinity;
-        const distanceKm = distanceM / 1000;
-        return distanceKm <= maxDistanceKm;
-      });
-    }
-
     return filtered;
-  }, [hospitals, searchQuery, maxDistanceKm, selectedSpecifications, selectedSpecializations]);
+  }, [hospitals, searchQuery, selectedSpecifications, selectedSpecializations]);
 
   return (
     <>
