@@ -583,8 +583,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         role="application"
         aria-label="Carte interactive des hôpitaux"
         aria-live="polite"
-        tabIndex={-1}
-        inert
       />
     </>
   )
