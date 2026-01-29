@@ -213,14 +213,14 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
             )}
             
             {hospital.fields.phone && (
-              <a 
+              <Link 
                 href={`tel:${hospital.fields.phone}`} 
                 className="flex items-center justify-center gap-2 focus:outline-none focus:ring-4 focus:ring-red-600 rounded px-2 py-1 -ml-2 hover:bg-black/10 transition-colors"
                 aria-label={`Appeler ${hospital.fields.name} au ${hospital.fields.phone}`}
                 onClick={(e) => e.stopPropagation()}
               >
                 <span className="text-sm md:text-base lg:text-lg text-start sm:text-center w-full text-black font-bold underline">Téléphone : {hospital.fields.phone}</span>
-              </a>
+              </Link>
             )}
             {!hospital.fields.phone && (
               <p className="text-white/70 text-sm italic">Aucun numéro de téléphone disponible</p>
