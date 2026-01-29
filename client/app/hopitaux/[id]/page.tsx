@@ -5,74 +5,15 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Image from 'next/image';
 import Link from 'next/link';
+import Loading from '@/components/Loading';
+import ErrorMessage from '@/components/ErrorMessage';
 import MapWrapper from '@/components/MapWrapper';
 import Attendance from '@/components/Attendance';
 import Specification from '@/components/Specification';
-
-interface HospitalDetails {
-  recordid: string;
-  fields: {
-    name: string;
-    addr_street?: string;
-    addr_postcode?: string;
-    addr_city?: string;
-    phone?: string;
-    lat?: number;
-    lon?: number;
-    website?: string;
-    email?: string;
-    emergency?: string;
-  };
-}
-
-interface AphService {
-  name: string;
-  code: string;
-  isPediatric: boolean;
-}
-
-interface AccessibilityOptions {
-  wheelchairAccessibleParking?: boolean;
-  wheelchairAccessibleEntrance?: boolean;
-  wheelchairAccessibleRestroom?: boolean;
-  wheelchairAccessibleSeating?: boolean;
-}
-
-interface PlaceDetails {
-  formattedAddress?: string;
-  accessibilityOptions: AccessibilityOptions;
-}
-
-interface Professionnal {
-  internist: boolean;
-  pmr: boolean;
-  rheumatologist: boolean;
-  cardiologist: boolean;
-  pulmonologist: boolean;
-  nephrologist: boolean;
-  gasteroenterologist: boolean;
-  endocrinologist: boolean;
-  dermatologist: boolean;
-  ent: boolean;
-  gynecologist: boolean;
-  urologist: boolean;
-  orthopedist: boolean;
-  psychologist: boolean;
-  neurosurgeon: boolean;
-  pediatric_surgeon: boolean;
-  orthopedic_surgeon: boolean;
-}
-
-interface MockHospitalData {
-  name: string;
-  place_id: string;
-  fire_fighter: boolean;
-  social_worker: boolean;
-  professionnal: Professionnal;
-}
+import type { Hospital, AccessibilityOptions, PlaceDetails, MockHospitalData, AphService } from '@/types/api';
 
 export default function HospitalDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const [hospital, setHospital] = useState<HospitalDetails | null>(null);
+  const [hospital, setHospital] = useState<Hospital | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hospitalId, setHospitalId] = useState<string | null>(null);
@@ -179,7 +120,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
             if (accessRes.ok) {
               const placeData: PlaceDetails = await accessRes.json();
               setPlaceAddress(placeData.formattedAddress || null);
-              setAccessibilityOptions(placeData.accessibilityOptions);
+              setAccessibilityOptions(placeData.accessibilityOptions ?? null);
             }
           }
         }
@@ -199,10 +140,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
         <Header />
         <main className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
           <div className="px-4 py-6 sm:px-6 max-w-2xl mx-auto pb-8">
-            <div className="p-8 text-center" role="status" aria-live="polite">
-              <div className="inline-block w-10 h-10 border-4 border-slate-200 border-t-primary rounded-full animate-spin" aria-hidden="true"></div>
-              <p className="mt-4 text-black font-medium">Chargement...</p>
-            </div>
+            <Loading message="Chargement..." ariaLabel="Chargement des caractéristiques de l'hôpital" />
           </div>
         </main>
       </>
@@ -215,9 +153,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
         <Header />
         <main className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
           <div className="px-4 py-6 sm:px-6 max-w-2xl mx-auto pb-8">
-            <div className="p-4 bg-rose-50 border-rose-300 border rounded-lg" role="alert">
-              <p className="text-rose-700 font-medium">⚠️ {error || 'Hôpital non trouvé'}</p>
-            </div>
+            <ErrorMessage message={error || 'Hôpital non trouvé'} />
             <Link 
               aria-label="Retour à la liste des hôpitaux"
               href="/hopitaux" 
@@ -230,12 +166,6 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
       </>
     );
   }
-
-  const address = [
-    hospital.fields.addr_street,
-    hospital.fields.addr_postcode,
-    hospital.fields.addr_city
-  ].filter(Boolean).join(', ');
 
   return (
     <>
@@ -356,10 +286,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           <h2 id="characteristics-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Spécifications</h2>
           
           {specificationsLoading ? (
-            <div className="flex items-center gap-2 text-slate-500" role="status" aria-live="polite">
-              <div className="w-4 h-4 border-2 border-slate-300 border-t-primary rounded-full animate-spin" aria-hidden="true"></div>
-              <span>Chargement des caractéristiques...</span>
-            </div>
+            <Loading message="Chargement des caractéristiques..." ariaLabel="Chargement des caractéristiques de l'hôpital" />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {(() => {
@@ -418,10 +345,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
             <h2 id="specializations-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Spécialisations médicales</h2>
             
             {specificationsLoading ? (
-              <div className="flex items-center gap-2 text-slate-500" role="status" aria-live="polite">
-                <div className="w-4 h-4 border-2 border-slate-300 border-t-primary rounded-full animate-spin" aria-hidden="true"></div>
-                <span>Chargement des spécialisations...</span>
-              </div>
+              <Loading message="Chargement des spécialisations..." ariaLabel="Chargement des spécialisations médicales" />
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {(() => {
