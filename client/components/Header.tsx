@@ -19,7 +19,7 @@ export default function Header() {
             <li className="w-full flex md:block items-center justify-center">
                 <Link 
                   href="/"
-                  aria-label="Accéder à la page d'accueil"
+                  aria-label="Accueil"
                   onMouseEnter={() => setHoveredLink('/')}
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
@@ -30,14 +30,14 @@ export default function Header() {
                 >
                     <Image 
                         src={(isActive('/') || isHovered('/')) ? "/images/icons/home-white.svg" : "/images/icons/home-black.svg"}
-                        alt="" 
+                        alt=""
                         width={100} 
                         height={100} 
                         className="w-10 h-10"
                     />
                     <span className={`hidden md:inline text-base font-bold transition-colors ${
                       (isActive('/') || isHovered('/')) ? 'text-white' : 'text-gray-700'
-                    }`}>
+                    }`} aria-hidden="true">
                       Accueil
                     </span>
                 </Link>
@@ -45,7 +45,7 @@ export default function Header() {
             <li className="w-full flex md:block items-center justify-center">
                 <Link 
                   href="/map"
-                  aria-label="Accéder à la carte"
+                  aria-label="Carte"
                   onMouseEnter={() => setHoveredLink('/map')}
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
@@ -56,14 +56,14 @@ export default function Header() {
                 >
                     <Image 
                         src={(isActive('/map') || isHovered('/map')) ? "/images/icons/map-white.svg" : "/images/icons/map-black.svg"}
-                        alt="Icone de carte" 
+                        alt=""
                         width={100} 
                         height={100} 
                         className="w-10 h-10"
                     />
                     <span className={`hidden md:inline text-base font-bold transition-colors ${
                       (isActive('/map') || isHovered('/map')) ? 'text-white' : 'text-gray-700'
-                    }`}>
+                    }`} aria-hidden="true">
                       Carte
                     </span>
                 </Link>
@@ -71,7 +71,7 @@ export default function Header() {
             <li className="w-full flex md:block items-center justify-center">
                 <Link 
                   href="/hopitaux"
-                  aria-label="Accéder à la liste des hôpitaux"
+                  aria-label="Liste des hôpitaux"
                   onMouseEnter={() => setHoveredLink('/hopitaux')}
                   onMouseLeave={() => setHoveredLink(null)}
                   className={`flex flex-row items-center justify-center md:justify-start gap-2 md:gap-4 px-4 py-3 transition-all duration-200 w-fit md:w-auto md:mx-4 focus:outline-none focus:ring-4 focus:ring-red-600 ${
@@ -89,7 +89,7 @@ export default function Header() {
                     />
                     <span className={`hidden md:inline text-base font-bold transition-colors ${
                       (isActive('/hopitaux') || isHovered('/hopitaux')) ? 'text-white' : 'text-gray-700'
-                    }`}>
+                    }`} aria-hidden="true">
                       Liste des hôpitaux
                     </span>
                 </Link>
