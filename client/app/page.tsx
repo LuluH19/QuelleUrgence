@@ -50,24 +50,22 @@ export default function Home() {
             Le site met également en avant les spécificités propres à chaque hôpital, comme les modalités de prise en charge, l&apos;accessibilité pour les personnes à mobilité réduite ou encore les accès réservés aux services de secours. En centralisant ces données fiables et actualisées, Quelles Urgences devient un outil simple et indispensable pour rendre le parcours de soins plus fluide et mieux informé.
           </p>
         </div>
-        <Link 
-          href="/hopitaux"
-          className="bg-primary text-white px-4 py-2 rounded-2xl font-bold w-fit hover:opacity-90 transition-opacity focus:outline-none focus:ring-4 focus:ring-red-600" 
-          aria-label="Accéder à la liste complète des hôpitaux disponibles"
-        >
-          Accéder à la liste des hôpitaux
-        </Link>
-      </section>
-      <section className='pt-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="map-heading">
-        <h2 id="map-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Passer par la carte</h2>
-        <MapWrapper />
-        <button 
-          className='bg-primary text-white px-4 py-2 rounded-2xl font-bold w-fit focus:outline-none focus:ring-4 focus:ring-red-600' 
-          type="button"
-          aria-label="Accéder à la carte interactive des hôpitaux"
-        >
-          Accéder à la carte
-        </button>
+        <div className="flex flex-row items-center justify-center gap-4">
+          <Link 
+            href="/hopitaux"
+            className="bg-primary text-white px-4 py-2 rounded-2xl font-bold w-fit hover:opacity-90 transition-opacity focus:outline-none focus:ring-4 focus:ring-red-600" 
+            aria-label="Accéder à la liste complète des hôpitaux disponibles"
+          >
+            Accéder à la liste des hôpitaux
+          </Link>
+          <Link
+            href="/map"
+            className='bg-primary text-white px-4 py-2 rounded-2xl font-bold w-fit hover:opacity-90 transition-opacity focus:outline-none focus:ring-4 focus:ring-red-600' 
+            aria-label="Accéder à la carte interactive des hôpitaux"
+          >
+            Accéder à la carte
+          </Link>
+        </div>
       </section>
       <FAQSection />
     </main>
