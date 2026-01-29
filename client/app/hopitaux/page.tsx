@@ -177,9 +177,10 @@ export default function HopitauxPage() {
             onChange={setSearchQuery}
             className="mb-4"
           />
-          {!loading && !error && hospitals.length > 0 && (
-            <div className="mb-6">
-              <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-72 position-relative -z-10 -mx-4 px-4 md:px-2 md:justify-center [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+           {!loading && !error && hospitals.length > 0 && (
+            <div className="mb-6 relative z-30">
+              {/* Changement ici : suppression de overflow-x-auto et ajout de flex-wrap */}
+              <div className="flex items-center justify-start gap-3 py-2">
                 <MultiSelectFilter
                   label="Spécifications"
                   options={specificationOptions}
@@ -193,7 +194,8 @@ export default function HopitauxPage() {
                   onChange={setSelectedSpecializations}
                 />
               </div>
-              <div className="text-center text-sm text-black -mt-64">
+              
+              <div className="text-center text-sm text-black mt-4">
                 {filteredHospitals.length} {filteredHospitals.length > 1 ? 'hôpitaux trouvés' : 'hôpital trouvé'}
               </div>
             </div>
