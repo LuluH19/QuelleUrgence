@@ -1,4 +1,4 @@
-import HospitalCard from "./HospitalCard";
+import HospitalCard from "@/components/hopitaux/HospitalCard";
 import { HospitalWithMock } from "@/types/api";
 import NotFoundData from "@/components/NotFoundData";
 
