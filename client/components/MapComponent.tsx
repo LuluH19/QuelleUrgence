@@ -3,8 +3,43 @@
 import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
-import { getHospitals } from '@/app/api/hospitals/route'
-import type { Hospital } from '@/types/api'
+import type { ComponentType } from 'react'
+
+interface Hospital {
+  recordid: string
+  fields: {
+    name: string
+    phone?: string
+    dist?: string
+    meta_geo_point?: [number, number] | number[]
+    geometry?: {
+      coordinates?: [number, number] | number[]
+    }
+    lat?: number
+    lon?: number
+  } & Record<string, unknown>
+}
+
+async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_HOSPITALS_API_URL
+    const radius = process.env.NEXT_PUBLIC_SEARCH_RADIUS
+    const apiUrl = `${baseUrl}&geofilter.distance=${latitude},${longitude},${radius}`
+    
+    const res = await fetch(apiUrl, { cache: 'no-store' })
+
+    if (!res.ok) {
+      console.error(`Failed to fetch hospitals: ${res.status} ${res.statusText}`)
+      return []
+    }
+
+    const data = await res.json()
+    return data.records as Hospital[]
+  } catch (error) {
+    console.error('Error fetching hospitals:', error)
+    return []
+  }
+}
 
 const extractCoordinates = (hospital: Hospital): [number, number] | null => {
   const fields = hospital.fields
@@ -32,13 +67,16 @@ const extractCoordinates = (hospital: Hospital): [number, number] | null => {
 
 interface MapContentProps {
   fullScreen?: boolean
+  initialCenter?: [number, number]
+  initialZoom?: number
+  focusRecordId?: string
 }
 
 const PARIS_COORDS: [number, number] = [48.8566, 2.3522]
 const DEFAULT_ZOOM = 13
 const PARIS_FALLBACK_ZOOM = 12
 
-function MapContent({ fullScreen = false }: MapContentProps) {
+function MapContent({ fullScreen = false, initialCenter, initialZoom, focusRecordId }: MapContentProps) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<LeafletMap | null>(null)
   const markersRef = useRef<LeafletMarker[]>([])
@@ -109,7 +147,9 @@ function MapContent({ fullScreen = false }: MapContentProps) {
 
       ;(container as any)._leaflet_id = null
 
-      const map = L.map(container).setView(PARIS_COORDS, PARIS_FALLBACK_ZOOM)
+      const map = L.map(container, {
+        keyboard: false
+      }).setView(PARIS_COORDS, PARIS_FALLBACK_ZOOM)
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
@@ -148,18 +188,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         controlLinks.forEach((link) => {
           (link as HTMLElement).setAttribute('tabindex', '-1')
         })
-        
-        // Désactiver le focus sur les clusters de marqueurs
-        const clusterMarkers = container.querySelectorAll('.marker-cluster, .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large')
-        clusterMarkers.forEach((cluster) => {
-          (cluster as HTMLElement).setAttribute('tabindex', '-1')
-        })
-        
-        // Désactiver le focus sur tous les marqueurs Leaflet
-        const allMarkers = container.querySelectorAll('.leaflet-marker-icon')
-        allMarkers.forEach((marker) => {
-          (marker as HTMLElement).setAttribute('tabindex', '-1')
-        })
       }
       
       const timers: NodeJS.Timeout[] = []
@@ -172,145 +200,42 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         subtree: true
       })
 
-      const formatDistance = (lat: number, lng: number): string | null => {
-        const userPos = userPositionRef.current
-
-        const fromUser =
-          userPos != null
-            ? (() => {
-                const R = 6371e3 // metres
-                const toRad = (deg: number) => (deg * Math.PI) / 180
-                const φ1 = toRad(userPos[0])
-                const φ2 = toRad(lat)
-                const Δφ = toRad(lat - userPos[0])
-                const Δλ = toRad(lng - userPos[1])
-
-                const a =
-                  Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-                  Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2)
-                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-                return R * c
-              })()
-            : null
-
-        if (fromUser == null || Number.isNaN(fromUser)) return null
-
-        if (fromUser >= 1000) {
-          const km = fromUser / 1000
-          return `${km.toFixed(1)} km`
-        }
-
-        const rounded = Math.round(fromUser / 50) * 50
-        return `${rounded} m`
-      }
-
-      const getPhone = (fields: Hospital['fields']): string | null => {
-        const anyFields = fields as Record<string, unknown>
-        const phone =
-          (anyFields.phone as string | undefined) ||
-          (anyFields.telephone as string | undefined) ||
-          (anyFields.tel as string | undefined)
-        if (!phone) return null
-        return phone.trim()
-      }
-
-      const createPopupHTML = (hospital: Hospital, lat: number, lng: number): string => {
+      const createPopupHTML = (hospitalName: string, lat: number, lng: number): string => {
         const userPos = userPositionRef.current
         let itineraryUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
         
         if (userPos) {
           itineraryUrl += `&origin=${userPos[0]},${userPos[1]}`
         }
-
-        const distanceLabel = formatDistance(lat, lng)
-        const phone = getPhone(hospital.fields)
-        const phoneHref = phone ? `tel:${phone.replace(/\s+/g, '')}` : null
-        const hospitalName = hospital.fields.name
-
+        
         return `
-          <div style="
-            padding: 12px 14px;
-            min-width: 220px;
-            max-width: 260px;
-            background-color: #3C0F7D;
-            color: #FFFFFF;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-          ">
-            <div style="font-weight: 700; margin-bottom: 6px; font-size: 15px; line-height: 1.3;">
+          <div style="padding: 8px; min-width: 200px;">
+            <div style="font-weight: bold; margin-bottom: 12px; font-size: 16px; color: #1f2937;">
               ${hospitalName}
             </div>
-            ${
-              distanceLabel
-                ? `<div style="font-size: 13px; margin-bottom: 8px; opacity: 0.9;">
-                     ${distanceLabel}
-                   </div>`
-                : ''
-            }
-            <div style="
-              display: flex;
-              align-items: center;
-              justify-content: space-between;
-              gap: 8px;
-              margin-top: 6px;
-            ">
-              ${
-                phone
-                  ? `<a
-                       href="${phoneHref}"
-                       style="
-                         display: inline-flex;
-                         align-items: center;
-                         gap: 6px;
-                         font-size: 13px;
-                         color: #FFFFFF;
-                         text-decoration: none;
-                         white-space: nowrap;
-                       "
-                     >
-                       <span style="
-                         display: inline-flex;
-                         align-items: center;
-                         justify-content: center;
-                         width: 20px;
-                         height: 20px;
-                         border-radius: 999px;
-                         background-color: rgba(255, 255, 255, 0.16);
-                       ">
-                         📞
-                       </span>
-                       <span>${phone}</span>
-                     </a>`
-                  : ''
-              }
-              <a 
-                href="${itineraryUrl}" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                style="
-                  display: inline-flex;
-                  align-items: center;
-                  justify-content: center;
-                  flex: 1;
-                  background-color: #EF4444;
-                  color: #FFFFFF;
-                  padding: 6px 10px;
-                  border-radius: 999px;
-                  text-decoration: none;
-                  font-weight: 600;
-                  font-size: 13px;
-                  transition: background-color 0.15s, transform 0.1s;
-                  text-align: center;
-                  box-sizing: border-box;
-                  margin-left: auto;
-                "
-                onmouseover="this.style.backgroundColor='#B91C1C'; this.style.transform='translateY(-1px)'"
-                onmouseout="this.style.backgroundColor='#EF4444'; this.style.transform='translateY(0)'"
-              >
-                Itinéraire
-              </a>
-            </div>
+            <a 
+              href="${itineraryUrl}" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              style="
+                display: inline-block;
+                background-color: #DC2626;
+                color: white;
+                padding: 8px 16px;
+                border-radius: 8px;
+                text-decoration: none;
+                font-weight: bold;
+                font-size: 14px;
+                transition: background-color 0.2s;
+                width: 100%;
+                text-align: center;
+                box-sizing: border-box;
+              "
+              onmouseover="this.style.backgroundColor='#B91C1C'"
+              onmouseout="this.style.backgroundColor='#DC2626'"
+            >
+              Itinéraire
+            </a>
           </div>
         `
       }
@@ -324,7 +249,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
           })
           
           if (marker) {
-            const newPopupContent = createPopupHTML(hospital, lat, lng)
+            const newPopupContent = createPopupHTML(hospital.fields.name, lat, lng)
             marker.setPopupContent(newPopupContent)
           }
         })
@@ -344,7 +269,8 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             return
           }
 
-          let markersAdded = 0
+          let focusMarker: LeafletMarker | null = null
+          let focusCoords: [number, number] | null = null
           
           hospitalsDataRef.current = []
           
@@ -357,26 +283,16 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             const [lat, lng] = coords
             hospitalsDataRef.current.push({ hospital, coords })
             
-            const popupContent = createPopupHTML(hospital, lat, lng)
+            const popupContent = createPopupHTML(hospital.fields.name, lat, lng)
             
             if (!mapInstanceRef.current) return
 
-            const marker = L.marker([lat, lng], { 
-              icon: redIcon
-            })
+            const marker = L.marker([lat, lng], { icon: redIcon })
               .bindPopup(popupContent, {
                 className: 'hospital-popup',
                 closeButton: true,
                 autoClose: false,
                 closeOnClick: false,
-              })
-              .on('popupopen', () => {
-                setTimeout(() => {
-                  const closeButton = document.querySelector('.leaflet-popup-close-button') as HTMLElement
-                  if (closeButton) {
-                    closeButton.setAttribute('tabindex', '-1')
-                  }
-                }, 0)
               })
             
             const handleMouseOver = () => {
@@ -390,8 +306,19 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             }
             
             markersRef.current.push(marker)
-            markersAdded++
+
+            if (focusRecordId && hospital.recordid === focusRecordId) {
+              focusMarker = marker
+              focusCoords = [lat, lng]
+            }
           })
+
+          if (focusMarker && focusCoords && mapInstanceRef.current) {
+            const zoomToUse = initialZoom ?? 16
+            mapInstanceRef.current.setView(focusCoords, zoomToUse)
+            mapInitializedRef.current = true
+            ;(focusMarker as LeafletMarker).openPopup()
+          }
         } catch (error) {
           console.error('Error loading hospitals:', error)
         }
@@ -416,7 +343,15 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         }
       }
 
-      if ("geolocation" in navigator) {
+      if (initialCenter && isValidCoordinates(initialCenter[0], initialCenter[1])) {
+        userPositionRef.current = null
+        if (!focusRecordId) {
+          const zoomToUse = initialZoom ?? DEFAULT_ZOOM
+          centerMapOnCoords(initialCenter, zoomToUse)
+        }
+        await loadHospitals(initialCenter[0], initialCenter[1])
+        updatePopups()
+      } else if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords
@@ -436,8 +371,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
               }
               userMarkerRef.current = L.marker(PARIS_COORDS, { 
                 icon: userIcon,
-                zIndexOffset: 1000,
-                keyboard: false
+                zIndexOffset: 1000
               })
                 .addTo(map)
                 .bindPopup('Votre position (approximative)', { closeButton: false })
@@ -454,8 +388,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             }
             userMarkerRef.current = L.marker([latitude, longitude], { 
               icon: userIcon,
-              zIndexOffset: 1000,
-              keyboard: false
+              zIndexOffset: 1000
             })
               .addTo(map)
               .bindPopup('Votre position', { closeButton: false })
@@ -588,6 +521,10 @@ function MapContent({ fullScreen = false }: MapContentProps) {
   )
 }
 
+interface MapComponentProps {
+  fullScreen?: boolean
+}
+
 const MapComponent = dynamic(() => Promise.resolve(MapContent), {
   ssr: false,
   loading: () => (
@@ -595,6 +532,6 @@ const MapComponent = dynamic(() => Promise.resolve(MapContent), {
       <p className="text-gray-500">Chargement de la carte...</p>
     </div>
   )
-})
+}) as ComponentType<MapContentProps>
 
 export default MapComponent
