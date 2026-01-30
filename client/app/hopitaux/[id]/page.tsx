@@ -333,10 +333,8 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
               })()}
               
               {!mockData && !accessibilityOptions && (
-                <div className="col-span-full text-center py-4">
-                  <p className="text-gray-500 italic">
-                    Les spécifications de cet établissement ne sont pas encore disponibles.
-                  </p>
+                <div className="col-span-full flex items-center justify-center">
+                  <NotFoundData message="Les spécifications de cet établissement ne sont pas encore disponibles." />
                 </div>
               )}
             </div>

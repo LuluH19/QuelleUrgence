@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Header from '@/components/Header';
-import HospitalList from './components/HospitalList';
+import HospitalList from '@/components/hopitaux/HospitalList';
 import SearchBar from '@/components/SearchBar';
 import MultiSelectFilter from '@/components/MultiSelectFilter';
 import Loading from '@/components/Loading';
