@@ -128,26 +128,22 @@ export default function HopitauxPage() {
     if (selectedSpecifications.length > 0) {
       filtered = filtered.filter(hospital => {
         return selectedSpecifications.every(spec => {
-          if (spec === 'fire_fighter') {
-            return hospital.mockData?.fire_fighter;
+          switch (spec) {
+            case 'fire_fighter':
+              return hospital.mockData?.fire_fighter;
+            case 'social_worker':
+              return hospital.mockData?.social_worker;
+            case 'wheelchairAccessibleEntrance':
+              return hospital.accessibilityOptions?.wheelchairAccessibleEntrance;
+            case 'wheelchairAccessibleParking':
+              return hospital.accessibilityOptions?.wheelchairAccessibleParking;
+            case 'wheelchairAccessibleRestroom':
+              return hospital.accessibilityOptions?.wheelchairAccessibleRestroom;
+            case 'wheelchairAccessibleSeating':
+              return hospital.accessibilityOptions?.wheelchairAccessibleSeating;
+            default:
+              return false;
           }
-          if (spec === 'social_worker') {
-            return hospital.mockData?.social_worker;
-          }
-          if (spec === 'wheelchairAccessibleEntrance') {
-            return hospital.accessibilityOptions?.wheelchairAccessibleEntrance;
-          }
-          if (spec === 'wheelchairAccessibleParking') {
-            return hospital.accessibilityOptions?.wheelchairAccessibleParking;
-          }
-          if (spec === 'wheelchairAccessibleRestroom') {
-            return hospital.accessibilityOptions?.wheelchairAccessibleRestroom;
-          }
-          if (spec === 'wheelchairAccessibleSeating') {
-            return hospital.accessibilityOptions?.wheelchairAccessibleSeating;
-          }
-          
-          return false;
         });
       });
     }
