@@ -13,8 +13,18 @@ const MapComponent = dynamic(() => import('./MapComponent'), {
 
 interface MapWrapperProps {
   fullScreen?: boolean
+  initialCenter?: [number, number]
+  initialZoom?: number
+  focusRecordId?: string
 }
 
-export default function MapWrapper({ fullScreen = false }: MapWrapperProps) {
-  return <MapComponent fullScreen={fullScreen} />
+export default function MapWrapper({ fullScreen = false, initialCenter, initialZoom, focusRecordId }: MapWrapperProps) {
+  return (
+    <MapComponent
+      fullScreen={fullScreen}
+      initialCenter={initialCenter}
+      initialZoom={initialZoom}
+      focusRecordId={focusRecordId}
+    />
+  )
 }
