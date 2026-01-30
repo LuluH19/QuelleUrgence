@@ -3,8 +3,43 @@
 import { useEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet'
-import { getHospitals } from '@/app/api/hospitals/route'
-import type { Hospital } from '@/types/api'
+import type { ComponentType } from 'react'
+
+interface Hospital {
+  recordid: string
+  fields: {
+    name: string
+    phone?: string
+    dist?: string
+    meta_geo_point?: [number, number] | number[]
+    geometry?: {
+      coordinates?: [number, number] | number[]
+    }
+    lat?: number
+    lon?: number
+  } & Record<string, unknown>
+}
+
+async function getHospitals(latitude: number, longitude: number): Promise<Hospital[]> {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_HOSPITALS_API_URL
+    const radius = process.env.NEXT_PUBLIC_SEARCH_RADIUS
+    const apiUrl = `${baseUrl}&geofilter.distance=${latitude},${longitude},${radius}`
+    
+    const res = await fetch(apiUrl, { cache: 'no-store' })
+
+    if (!res.ok) {
+      console.error(`Failed to fetch hospitals: ${res.status} ${res.statusText}`)
+      return []
+    }
+
+    const data = await res.json()
+    return data.records as Hospital[]
+  } catch (error) {
+    console.error('Error fetching hospitals:', error)
+    return []
+  }
+}
 
 const extractCoordinates = (hospital: Hospital): [number, number] | null => {
   const fields = hospital.fields
@@ -32,13 +67,16 @@ const extractCoordinates = (hospital: Hospital): [number, number] | null => {
 
 interface MapContentProps {
   fullScreen?: boolean
+  initialCenter?: [number, number]
+  initialZoom?: number
+  focusRecordId?: string
 }
 
 const PARIS_COORDS: [number, number] = [48.8566, 2.3522]
 const DEFAULT_ZOOM = 13
 const PARIS_FALLBACK_ZOOM = 12
 
-function MapContent({ fullScreen = false }: MapContentProps) {
+function MapContent({ fullScreen = false, initialCenter, initialZoom, focusRecordId }: MapContentProps) {
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<LeafletMap | null>(null)
   const markersRef = useRef<LeafletMarker[]>([])
@@ -55,7 +93,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
     const container = mapRef.current
 
     const initMap = async () => {
-      if (mapInstanceRef.current) return undefined
+      if (mapInstanceRef.current) return
 
       const L = (await import('leaflet')).default
       await import('leaflet.markercluster')
@@ -109,7 +147,9 @@ function MapContent({ fullScreen = false }: MapContentProps) {
 
       ;(container as any)._leaflet_id = null
 
-      const map = L.map(container).setView(PARIS_COORDS, PARIS_FALLBACK_ZOOM)
+      const map = L.map(container, {
+        keyboard: false
+      }).setView(PARIS_COORDS, PARIS_FALLBACK_ZOOM)
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors',
@@ -138,26 +178,23 @@ function MapContent({ fullScreen = false }: MapContentProps) {
       map.addLayer(markerClusterGroup)
       markerClusterGroupRef.current = markerClusterGroup
       
+      // Fonction pour désactiver le focus sur les contrôles et clusters
       const disableMapFocus = () => {
-        const mapContainer = container.querySelector('.leaflet-container') as HTMLElement
-        if (mapContainer) {
-          mapContainer.setAttribute('tabindex', '-1')
-        }
-        
+        // Désactiver le focus sur les contrôles de la carte (zoom, etc.)
         const controlLinks = container.querySelectorAll('.leaflet-control a')
         controlLinks.forEach((link) => {
           (link as HTMLElement).setAttribute('tabindex', '-1')
         })
         
-        // Désactiver le focus sur les clusters de marqueurs
-        const clusterMarkers = container.querySelectorAll('.marker-cluster, .marker-cluster-small, .marker-cluster-medium, .marker-cluster-large')
-        clusterMarkers.forEach((cluster) => {
+        // Désactiver le focus sur les clusters
+        const clusters = container.querySelectorAll('.marker-cluster')
+        clusters.forEach((cluster) => {
           (cluster as HTMLElement).setAttribute('tabindex', '-1')
         })
         
-        // Désactiver le focus sur tous les marqueurs Leaflet
-        const allMarkers = container.querySelectorAll('.leaflet-marker-icon')
-        allMarkers.forEach((marker) => {
+        // Désactiver le focus sur tous les marqueurs
+        const markers = container.querySelectorAll('.leaflet-marker-icon')
+        markers.forEach((marker) => {
           (marker as HTMLElement).setAttribute('tabindex', '-1')
         })
       }
@@ -165,6 +202,7 @@ function MapContent({ fullScreen = false }: MapContentProps) {
       const timers: NodeJS.Timeout[] = []
       timers.push(setTimeout(disableMapFocus, 100))
       timers.push(setTimeout(disableMapFocus, 500))
+      timers.push(setTimeout(disableMapFocus, 1000))
       
       const observer = new MutationObserver(disableMapFocus)
       observer.observe(container, {
@@ -221,12 +259,11 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         if (userPos) {
           itineraryUrl += `&origin=${userPos[0]},${userPos[1]}`
         }
-
         const distanceLabel = formatDistance(lat, lng)
         const phone = getPhone(hospital.fields)
         const phoneHref = phone ? `tel:${phone.replace(/\s+/g, '')}` : null
         const hospitalName = hospital.fields.name
-
+        
         return `
           <div style="
             padding: 12px 14px;
@@ -344,7 +381,8 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             return
           }
 
-          let markersAdded = 0
+          let focusMarker: LeafletMarker | null = null
+          let focusCoords: [number, number] | null = null
           
           hospitalsDataRef.current = []
           
@@ -362,7 +400,8 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             if (!mapInstanceRef.current) return
 
             const marker = L.marker([lat, lng], { 
-              icon: redIcon
+              icon: redIcon,
+              keyboard: false
             })
               .bindPopup(popupContent, {
                 className: 'hospital-popup',
@@ -371,12 +410,11 @@ function MapContent({ fullScreen = false }: MapContentProps) {
                 closeOnClick: false,
               })
               .on('popupopen', () => {
-                setTimeout(() => {
-                  const closeButton = document.querySelector('.leaflet-popup-close-button') as HTMLElement
-                  if (closeButton) {
-                    closeButton.setAttribute('tabindex', '-1')
-                  }
-                }, 0)
+                // Désactiver le focus sur le bouton de fermeture du popup
+                const closeButton = container.querySelector('.leaflet-popup-close-button') as HTMLElement
+                if (closeButton) {
+                  closeButton.setAttribute('tabindex', '-1')
+                }
               })
             
             const handleMouseOver = () => {
@@ -390,8 +428,19 @@ function MapContent({ fullScreen = false }: MapContentProps) {
             }
             
             markersRef.current.push(marker)
-            markersAdded++
+
+            if (focusRecordId && hospital.recordid === focusRecordId) {
+              focusMarker = marker
+              focusCoords = [lat, lng]
+            }
           })
+
+          if (focusMarker && focusCoords && mapInstanceRef.current) {
+            const zoomToUse = initialZoom ?? 16
+            mapInstanceRef.current.setView(focusCoords, zoomToUse)
+            mapInitializedRef.current = true
+            ;(focusMarker as LeafletMarker).openPopup()
+          }
         } catch (error) {
           console.error('Error loading hospitals:', error)
         }
@@ -416,7 +465,15 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         }
       }
 
-      if ("geolocation" in navigator) {
+      if (initialCenter && isValidCoordinates(initialCenter[0], initialCenter[1])) {
+        userPositionRef.current = null
+        if (!focusRecordId) {
+          const zoomToUse = initialZoom ?? DEFAULT_ZOOM
+          centerMapOnCoords(initialCenter, zoomToUse)
+        }
+        await loadHospitals(initialCenter[0], initialCenter[1])
+        updatePopups()
+      } else if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords
@@ -500,15 +557,10 @@ function MapContent({ fullScreen = false }: MapContentProps) {
         await loadHospitals(PARIS_COORDS[0], PARIS_COORDS[1])
       }
       
-      // Retourner les ressources à nettoyer
-      return { observer, timers }
+      // Pas de return nécessaire
     }
 
-    let cleanupResources: { observer?: MutationObserver; timers?: NodeJS.Timeout[] } | undefined
-    
-    initMap().then((resources) => {
-      cleanupResources = resources
-    })
+    initMap()
 
     return () => {
       markerEventHandlersRef.current.forEach((handlers, marker) => {
@@ -531,12 +583,6 @@ function MapContent({ fullScreen = false }: MapContentProps) {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null
-      }
-      if (cleanupResources?.observer) {
-        cleanupResources.observer.disconnect()
-      }
-      if (cleanupResources?.timers) {
-        cleanupResources.timers.forEach(timer => clearTimeout(timer))
       }
     }
   }, [])
@@ -588,6 +634,10 @@ function MapContent({ fullScreen = false }: MapContentProps) {
   )
 }
 
+interface MapComponentProps {
+  fullScreen?: boolean
+}
+
 const MapComponent = dynamic(() => Promise.resolve(MapContent), {
   ssr: false,
   loading: () => (
@@ -595,6 +645,6 @@ const MapComponent = dynamic(() => Promise.resolve(MapContent), {
       <p className="text-gray-500">Chargement de la carte...</p>
     </div>
   )
-})
+}) as ComponentType<MapContentProps>
 
 export default MapComponent

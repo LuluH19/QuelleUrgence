@@ -40,7 +40,6 @@ export default function SearchBar({
         "rounded-full",
         "px-6 py-3",
         "shadow-sm",
-        "font-[Arial]",
         "focus-within:ring-4 focus-within:ring-red-600",
         className,
       ].join(" ")}

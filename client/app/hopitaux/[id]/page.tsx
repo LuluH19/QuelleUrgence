@@ -168,6 +168,30 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
     );
   }
 
+  const hospitalCenter: [number, number] | null = (() => {
+    const fields = hospital.fields;
+
+    if (fields.meta_geo_point && Array.isArray(fields.meta_geo_point)) {
+      const [lat, lon] = fields.meta_geo_point;
+      if (typeof lat === 'number' && typeof lon === 'number') {
+        return [lat, lon];
+      }
+    }
+
+    if (fields.geometry?.coordinates && Array.isArray(fields.geometry.coordinates)) {
+      const [lon, lat] = fields.geometry.coordinates;
+      if (typeof lat === 'number' && typeof lon === 'number') {
+        return [lat, lon];
+      }
+    }
+
+    if (fields.lat && fields.lon) {
+      return [fields.lat, fields.lon];
+    }
+
+    return null;
+  })();
+
   return (
     <>
       <Header />
@@ -204,7 +228,11 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
 
         <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="map-heading">
           <h2 id="map-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Localisation</h2>
-          <MapWrapper />
+          <MapWrapper
+            initialCenter={hospitalCenter ?? undefined}
+            initialZoom={16}
+            focusRecordId={hospital.recordid}
+          />
           <div className="w-full max-w-4xl flex flex-col items-center justify-center gap-2">
             {placeAddress && (
               <div className="flex items-center justify-center gap-2 text-black">
@@ -333,10 +361,8 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
               })()}
               
               {!mockData && !accessibilityOptions && (
-                <div className="col-span-full text-center py-4">
-                  <p className="text-gray-500 italic">
-                    Les spécifications de cet établissement ne sont pas encore disponibles.
-                  </p>
+                <div className="col-span-full flex items-center justify-center">
+                  <NotFoundData message="Les spécifications de cet établissement ne sont pas encore disponibles." />
                 </div>
               )}
             </div>
