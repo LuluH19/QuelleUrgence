@@ -1,8 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link';
 import Header from '@/components/Header'
-import MapWrapper from '@/components/MapWrapper'
-import FAQSection from '@/app/components/FAQSection'
+import FAQSection from '@/components/home/FAQSection'
 
 export default function Home() {
   return (
