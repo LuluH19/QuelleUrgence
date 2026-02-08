@@ -2,10 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --text-scale: 1;
+  /* Contraste et lisibilité : focus visible pour navigation clavier */
+  --focus-ring: 4px solid #dc2626;
+  --focus-ring-offset: 2px;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+}
+
+html {
+  font-size: calc(100% * var(--text-scale, 1));
 }
 
 html,
@@ -18,6 +29,11 @@ body {
   font-family: "Arial", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Cohérence pour les lecteurs d'écran : éléments décoratifs masqués à l'annonce */
+[aria-hidden="true"] {
+  @apply pointer-events-none;
 }
 
 a {

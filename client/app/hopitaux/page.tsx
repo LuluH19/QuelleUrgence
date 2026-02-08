@@ -7,7 +7,9 @@ import SearchBar from '@/components/SearchBar';
 import MultiSelectFilter from '@/components/MultiSelectFilter';
 import Loading from '@/components/Loading';
 import ErrorMessage from '@/components/ErrorMessage';
+import AccessibilityBar from '@/components/AccessibilityBar';
 import { getHospitals } from '@/app/api/hospitals/route';
+import { sortByRecommendation } from '@/lib/recommendation';
 import type { Professionnal, PlaceDetails, MockHospitalData, HospitalWithMock } from '@/types/api';
 export const dynamic = 'force-dynamic';
 
@@ -159,10 +161,14 @@ export default function HopitauxPage() {
     return filtered;
   }, [hospitals, searchQuery, selectedSpecifications, selectedSpecializations]);
 
+  const { sorted: sortedHospitals, recommendedRecordId } = useMemo(() => {
+    return sortByRecommendation(filteredHospitals, selectedSpecializations, null);
+  }, [filteredHospitals, selectedSpecializations]);
+
   return (
     <>
       <Header />
-      <main className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50">
+      <main id="main-content" className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50" tabIndex={-1}>
         <div className="px-4 py-6 sm:px-6 max-w-4xl mx-auto pb-8">
           <h1 className="sr-only text-2xl md:text-3xl font-bold text-primary mb-6 text-center">
             Hôpitaux avec services d&apos;urgence
@@ -196,10 +202,37 @@ export default function HopitauxPage() {
             </div>
           )}
 
+          {/* En gros c'est un texte qui permet d'affiché un texte qui explique de pourquoi Le site recommandé est mis 
+          en évidence visuellement et textuellement. C'est pour ça que je le laisse en commentaire pour l'instant, mais 
+          je pense que c'est important de le remettre à terme, peut-être en l'intégrant dans une section "Comment ça marche ?" 
+          ou "Pourquoi ce classement ?"
+           */}
+          {
+          /* {!loading && !error && sortedHospitals.length > 0 && (
+            <section
+              className="mb-6 p-4 bg-white/80 rounded-xl border-2 border-primary text-left"
+              aria-labelledby="critères-affichage"
+            >
+              <h2 id="critères-affichage" className="text-base font-bold text-primary mb-2">
+                Critères d&apos;affichage
+              </h2>
+              <p className="text-sm text-black leading-relaxed">
+                La liste est triée selon : <strong>distance</strong>, <strong>trafic</strong> (affluence), <strong>spécialités médicales</strong> et <strong>accessibilité</strong> (entrée, parking, toilettes, places assises). Le site <strong>recommandé</strong> est mis en évidence en premier avec un bandeau « Recommandé ».
+              </p>
+              <div className="mt-4 pt-4 border-t border-primary/30">
+                <AccessibilityBar />
+              </div>
+            </section>
+          )} */
+          }
+
           {loading && <Loading message="Localisation en cours..." ariaLabel="Chargement des hôpitaux à proximité" />}
           {error && <ErrorMessage message={error} />}
           {!loading && !error && (
-            <HospitalList hospitals={filteredHospitals} />
+            <HospitalList
+              hospitals={sortedHospitals}
+              recommendedRecordId={recommendedRecordId}
+            />
           )}
         </div>
       </main>
