@@ -22,11 +22,7 @@ function getStoredScale(): number {
 }
 
 export default function AccessibilityBar() {
-  const [scale, setScale] = useState(1);
-
-  useEffect(() => {
-    setScale(getStoredScale());
-  }, []);
+  const [scale, setScale] = useState(() => getStoredScale());
 
   useEffect(() => {
     document.documentElement.style.setProperty('--text-scale', String(scale));
