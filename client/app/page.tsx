@@ -7,7 +7,7 @@ export default function Home() {
   return (
     <>
       <Header />
-      <main className="bg-white">
+      <main id="main-content" className="bg-white" tabIndex={-1}>
       <section className="relative shadow-[0_4px_4px_rgba(0,0,0,0.25)]" aria-label="En-tête de la page">
         <div className="absolute top-0 left-0 w-full h-full">
           <Image 
