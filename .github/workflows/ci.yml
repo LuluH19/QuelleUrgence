@@ -10,6 +10,8 @@ on:
     branches: [main, dev]
     paths:
       - "client/**"
+      - ".github/workflows/ci.yml"
+      - ".commitlintrc.json"
 
 permissions:
   contents: read
