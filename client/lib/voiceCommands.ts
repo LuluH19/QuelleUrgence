@@ -74,14 +74,15 @@ const SEARCH_PREFIX =
   /^(?:(?:ok|alors|euh|je veux|je voudrais|j['’ ]aimerais|peux[- ]tu|pouvez[- ]vous|tu peux)\s+)*(?:re)?(?:cherch(?:er|e|es|ez)|trouv(?:er|e|ez))(?:[- ]moi)?\s+(.*)$/
 
 const SEARCH_LEADING_WORDS =
-  /^(?:(?:l['’]|le |la |les |un |une |des |du |de |d['’])\s*)?(?:(?:h[oô]pital|h[oô]pitaux|clinique|centre hospitalier)\s+)?/
+  /^(?:(?:l['’]|d['’]|(?:le|la|les|un|une|des|du|de|h[oô]pital|h[oô]pitaux|clinique|centre hospitalier)\s)\s*)+/
 
 function extractSearchQuery(transcript: string): string | null {
   const lowered = transcript.toLowerCase().replace(/\s+/g, ' ').trim()
   const match = lowered.match(SEARCH_PREFIX)
   if (!match) return null
-  const query = match[1]
+  const query = `${match[1]} `
     .replace(SEARCH_LEADING_WORDS, '')
+    .trim()
     .replace(/\s+(?:s['’ ]il (?:te|vous) pla[iî]t|stp|svp|merci)$/, '')
     .replace(/[.!?,;:]+$/, '')
     .trim()

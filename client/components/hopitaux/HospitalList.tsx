@@ -17,16 +17,18 @@ function HospitalList({ hospitals, recommendedRecordId = null, recommendationRea
     }
 
     return (
-        <div className="space-y-3" role="list" aria-label="Liste des hôpitaux avec services d'urgence, triée par recommandation">
+        // role="list" conserve la sémantique de liste dans Safari/VoiceOver malgré list-style: none
+        <ul className="space-y-3 list-none" role="list" aria-label="Liste des hôpitaux avec services d'urgence, triée par recommandation">
             {hospitals.map((hospital) => (
-                <HospitalCard
-                  key={hospital.recordid}
-                  hospital={hospital}
-                  isRecommended={hospital.recordid === recommendedRecordId}
-                  recommendationReasons={hospital.recordid === recommendedRecordId ? recommendationReasons : undefined}
-                />
+                <li key={hospital.recordid}>
+                    <HospitalCard
+                      hospital={hospital}
+                      isRecommended={hospital.recordid === recommendedRecordId}
+                      recommendationReasons={hospital.recordid === recommendedRecordId ? recommendationReasons : undefined}
+                    />
+                </li>
             ))}
-        </div>
+        </ul>
     );
 }
 

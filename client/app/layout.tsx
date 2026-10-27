@@ -1,6 +1,9 @@
 import './globals.scss'
+import './cognitive-mode.scss'
+import CognitiveModeScript from '@/components/cognitive/CognitiveModeScript';
 import { Metadata } from 'next';
 import TextScaleInit from '@/components/TextScaleInit';
+import VoiceCommand from '@/components/VoiceCommand';
 import Footer from '@/components/Footer';
 export const metadata: Metadata = {
   title: {
@@ -19,8 +22,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="fr">
+    <html lang="fr" suppressHydrationWarning>
       <head>
+        <CognitiveModeScript />
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="pb-20 md:pb-0 md:pl-64">
@@ -32,6 +36,7 @@ export default function RootLayout({
           Aller au contenu principal
         </a>
         {children}
+        <VoiceCommand />
         <Footer />
       </body>
     </html>

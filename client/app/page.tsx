@@ -3,14 +3,17 @@ import Link from 'next/link';
 import Header from '@/components/Header'
 import FAQSection from '@/components/home/FAQSection'
 import RecentHospitals from '@/components/RecentHospitals'
+import CognitiveModeToggle from '@/components/cognitive/CognitiveModeToggle'
+import CognitiveEssentials from '@/components/cognitive/CognitiveEssentials'
+import CognitiveCollapse from '@/components/cognitive/CognitiveCollapse'
 
 export default function Home() {
   return (
     <>
       <Header />
       <main id="main-content" className="bg-white" tabIndex={-1}>
-      <section className="relative shadow-[0_4px_4px_rgba(0,0,0,0.25)]" aria-label="En-tête de la page">
-        <div className="absolute top-0 left-0 w-full h-full">
+      <section className="relative shadow-[0_4px_4px_rgba(0,0,0,0.25)]" aria-label="En-tête de la page" data-cognitive-hero="">
+        <div className="absolute top-0 left-0 w-full h-full" data-cognitive="hide">
           <Image 
             src="/images/home/hero-banner.webp" 
             alt="Vue d'un service d'urgences hospitalier moderne et accueillant" 
@@ -25,7 +28,7 @@ export default function Home() {
         </div>
         <div className="relative z-10 flex flex-row justify-around items-center gap-4 pt-4 px-4 w-full">
           <h1 className="text-2xl md:text-4xl lg:text-6xl font-bold text-white text-left">Quelles Urgences</h1>
-          <div>
+          <div data-cognitive="hide">
             <Image 
               src="/images/home/doctor.webp" 
               alt="Professionnel de santé souriant prêt à accueillir les patients"
@@ -40,8 +43,12 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <div className="px-4 pt-6 flex flex-col gap-6">
+        <CognitiveModeToggle variant="banner" />
+        <CognitiveEssentials />
+      </div>
       <RecentHospitals className="mx-4 mt-6" />
-      <section id="main-content" className="pt-6 px-4 flex flex-col gap-4 items-center" aria-labelledby="about-heading">
+      <section id="main-content" className="pt-6 px-4 flex flex-col gap-4 items-center" aria-labelledby="about-heading" data-cognitive="hide">
         <h2 id="about-heading" className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full">Qu&apos;est-ce que Quelles Urgences ?</h2>
         <div className="text-sm md:text-base lg:text-lg text-left flex flex-col gap-4 w-full">
           <p>
@@ -68,7 +75,9 @@ export default function Home() {
           </Link>
         </div>
       </section>
-      <FAQSection />
+      <CognitiveCollapse label="Questions fréquentes" buttonWrapperClassName="px-4 pt-6">
+        <FAQSection />
+      </CognitiveCollapse>
     </main>
     </>
   )

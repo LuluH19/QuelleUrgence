@@ -13,6 +13,8 @@ import Specification from '@/components/Specification';
 import NotFoundData from '@/components/NotFoundData';
 import type { Hospital, MockHospitalData, AphService } from '@/types/api';
 import { getAphpServices } from '@/lib/aphp';
+import CognitiveCollapse from '@/components/cognitive/CognitiveCollapse';
+import CognitiveHospitalActions from '@/components/cognitive/CognitiveHospitalActions';
 import { addToHistory } from '@/lib/history';
 
 export default function HospitalDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -190,8 +192,8 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
     <>
       <Header />
       <main id="main-content" className="bg-white" tabIndex={-1}>
-        <section className="relative shadow-[0_4px_4px_rgba(0,0,0,0.25)]" aria-label="En-tête de la page">
-          <div className="absolute top-0 left-0 w-full h-full">
+        <section className="relative shadow-[0_4px_4px_rgba(0,0,0,0.25)]" aria-label="En-tête de la page" data-cognitive-hero="">
+          <div className="absolute top-0 left-0 w-full h-full" data-cognitive="hide">
             <Image 
               src="/images/home/hero-banner.webp" 
               alt="Vue d'un service d'urgences hospitalier moderne et accueillant" 
@@ -220,8 +222,15 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </section>
 
+        <CognitiveHospitalActions
+          name={hospital.fields.name}
+          phone={hospital.fields.phone}
+          center={hospitalCenter}
+        />
+
         <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="map-heading">
           <h2 id="map-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Localisation</h2>
+          <CognitiveCollapse label="Voir la carte" unmountWhenClosed className="w-full" contentClassName="w-full flex flex-col gap-4 items-center">
           <MapWrapper
             initialCenter={hospitalCenter ?? undefined}
             initialZoom={16}
@@ -253,6 +262,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           >
             Accéder à la carte
           </button>
+          </CognitiveCollapse>
         </section>
 
         <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="affluence-heading">
@@ -301,6 +311,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           )}
         </section>
 
+        <CognitiveCollapse label="Plus d'informations sur l'hôpital" buttonWrapperClassName="px-4 pb-6">
         <section className='py-6 px-4 flex flex-col gap-4' aria-labelledby="characteristics-heading">
           <h2 id="characteristics-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Spécifications</h2>
           
@@ -442,6 +453,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
             )}
           </section>
         )}
+        </CognitiveCollapse>
       </main>
     </>
   );

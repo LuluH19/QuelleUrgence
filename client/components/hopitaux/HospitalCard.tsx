@@ -25,7 +25,6 @@ function HospitalCard({ hospital, isRecommended = false, recommendationReasons =
                 ? "bg-primary border-2 border-amber-400 ring-2 ring-amber-400/50"
                 : "bg-primary"
             }`}
-            role="listitem"
             aria-label={cardLabel}
         >
             {isRecommended && (

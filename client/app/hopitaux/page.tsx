@@ -9,8 +9,11 @@ import Loading from '@/components/Loading';
 import ErrorMessage from '@/components/ErrorMessage';
 import AccessibilityBar from '@/components/AccessibilityBar';
 import RecentHospitals from '@/components/RecentHospitals';
+import CognitiveCollapse from '@/components/cognitive/CognitiveCollapse';
+import CognitiveListLimiter from '@/components/cognitive/CognitiveListLimiter';
 import RecommendationCriteria from '@/components/hopitaux/RecommendationCriteria';
 import { getHospitals } from '@/lib/hospitals';
+import { useSearchQueryFromVoice } from '@/lib/voiceSearch';
 import { sortByRecommendation, getRecommendationReasons } from '@/lib/recommendation';
 import type { Hospital, Professionnal, MockHospitalData, HospitalWithMock } from '@/types/api';
 export const dynamic = 'force-dynamic';
@@ -37,6 +40,7 @@ export default function HopitauxPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  useSearchQueryFromVoice(setSearchQuery);
   const [selectedSpecifications, setSelectedSpecifications] = useState<string[]>([]);
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
 
@@ -167,6 +171,7 @@ export default function HopitauxPage() {
           <h1 className="sr-only text-2xl md:text-3xl font-bold text-primary mb-6 text-center">
             Hôpitaux avec services d&apos;urgence
           </h1>
+          <CognitiveCollapse label="Chercher ou filtrer les hôpitaux">
           <SearchBar
             placeholder="Rechercher un hôpital"
             value={searchQuery}
@@ -207,15 +212,18 @@ export default function HopitauxPage() {
               <AccessibilityBar />
             </RecommendationCriteria>
           )}
+          </CognitiveCollapse>
 
           {loading && <Loading message="Localisation en cours..." ariaLabel="Chargement des hôpitaux à proximité" />}
           {error && <ErrorMessage message={error} />}
           {!loading && (!error || hospitals.length > 0) && (
+            <CognitiveListLimiter count={sortedHospitals.length}>
             <HospitalList
               hospitals={sortedHospitals}
               recommendedRecordId={recommendedRecordId}
               recommendationReasons={recommendationReasons}
             />
+            </CognitiveListLimiter>
           )}
         </div>
       </main>

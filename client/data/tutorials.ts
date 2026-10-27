@@ -102,6 +102,7 @@ export const tutorials: Tutorial[] = [
     notes: [
       'La distance de chaque hôpital est écrite en kilomètres (km).',
       'Vous pouvez appeler un hôpital en appuyant sur son numéro de téléphone.',
+      'En « Mode simple », appuyez d’abord sur « Chercher ou filtrer les hôpitaux » pour voir la recherche et les filtres.',
     ],
     visual: 'filter',
     visualDescription:
@@ -145,7 +146,8 @@ export const tutorials: Tutorial[] = [
       'Chaque repère sur la carte est un hôpital.',
       'Un rond avec un nombre regroupe plusieurs hôpitaux. Appuyez dessus pour zoomer.',
       'Appuyez sur un repère.',
-      'Une fenêtre s’ouvre. Elle donne le nom de l’hôpital, la distance et le téléphone.',
+      'Une fenêtre s’ouvre. Elle donne le nom de l’hôpital et son téléphone, s’il est connu.',
+      'Si vous avez partagé votre position, la fenêtre donne aussi la distance.',
       'Appuyez sur « Itinéraire » pour voir le trajet dans Google Maps.',
     ],
     notes: [
@@ -166,6 +168,6 @@ export const tutorials: Tutorial[] = [
  */
 export const upcomingTutorials: { id: string; title: string }[] = [
   { id: 'aide-commandes-vocales', title: 'Commandes vocales (bêta)' },
-  { id: 'aide-urgence-cognitive', title: 'Mode « urgence cognitive »' },
+  { id: 'aide-urgence-cognitive', title: 'Mode simple (urgence cognitive)' },
   { id: 'aide-historique', title: 'Historique des hôpitaux consultés' },
 ];

@@ -212,6 +212,7 @@ export default function VoiceCommand() {
   }, [execute, report])
 
   const closePanel = useCallback(() => {
+    handledRef.current = true
     recognitionRef.current?.abort()
     setPanelOpen(false)
     setConfirmCall(false)
@@ -231,6 +232,7 @@ export default function VoiceCommand() {
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key !== 'Escape') return
     if (listening) {
+      handledRef.current = true
       recognitionRef.current?.abort()
       report({ tone: 'info', text: 'Écoute annulée.' })
     } else if (panelOpen) {
@@ -288,7 +290,7 @@ export default function VoiceCommand() {
             <>
               {listening && (
                 <p className="mb-2 flex items-center gap-2 text-sm font-bold text-primary">
-                  <span className="inline-block h-3 w-3 animate-pulse rounded-full bg-red-600" aria-hidden="true" />
+                  <span className="inline-block h-3 w-3 motion-safe:animate-pulse rounded-full bg-red-600" aria-hidden="true" />
                   Écoute en cours…
                 </p>
               )}
@@ -380,7 +382,7 @@ export default function VoiceCommand() {
         {supported === false ? (
           <FaMicrophoneSlash className="h-5 w-5" aria-hidden="true" />
         ) : (
-          <FaMicrophone className={`h-5 w-5 ${listening ? 'animate-pulse' : ''}`} aria-hidden="true" />
+          <FaMicrophone className={`h-5 w-5 ${listening ? 'motion-safe:animate-pulse' : ''}`} aria-hidden="true" />
         )}
         <span className="sr-only md:not-sr-only">Commandes vocales</span>
         <span className="sr-only">{supported === false ? ' (indisponibles)' : ''}</span>
