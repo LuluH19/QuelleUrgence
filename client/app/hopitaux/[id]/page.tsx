@@ -11,7 +11,7 @@ import MapWrapper from '@/components/MapWrapper';
 import Attendance from '@/components/Attendance';
 import Specification from '@/components/Specification';
 import NotFoundData from '@/components/NotFoundData';
-import type { Hospital, AccessibilityOptions, PlaceDetails, MockHospitalData, AphService } from '@/types/api';
+import type { Hospital, MockHospitalData, AphService } from '@/types/api';
 
 export default function HospitalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [hospital, setHospital] = useState<Hospital | null>(null);
@@ -22,8 +22,6 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
   const [matchingServices, setMatchingServices] = useState<AphService[]>([]);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [mockData, setMockData] = useState<MockHospitalData | null>(null);
-  const [accessibilityOptions, setAccessibilityOptions] = useState<AccessibilityOptions | null>(null);
-  const [placeAddress, setPlaceAddress] = useState<string | null>(null);
   const [specificationsLoading, setspecificationsLoading] = useState(true);
   const router = useRouter();
 
@@ -116,14 +114,6 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
         if (mockRes.ok) {
           const mockHospital: MockHospitalData = await mockRes.json();
           setMockData(mockHospital);
-          if (mockHospital.place_id && mockHospital.place_id !== 'TODO_GOOGLE_PLACE_ID') {
-            const accessRes = await fetch(`/api/hospitals/accessibility/${mockHospital.place_id}`);
-            if (accessRes.ok) {
-              const placeData: PlaceDetails = await accessRes.json();
-              setPlaceAddress(placeData.formattedAddress || null);
-              setAccessibilityOptions(placeData.accessibilityOptions ?? null);
-            }
-          }
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des caractéristiques:', error);
@@ -234,12 +224,6 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
             focusRecordId={hospital.recordid}
           />
           <div className="w-full max-w-4xl flex flex-col items-center justify-center gap-2">
-            {placeAddress && (
-              <div className="flex items-center justify-center gap-2 text-black">
-                <p className="text-sm md:text-base lg:text-lg text-center font-bold">Adresse : {placeAddress}</p>
-              </div>
-            )}
-            
             {hospital.fields.phone && (
               <Link 
                 href={`tel:${hospital.fields.phone}`} 
@@ -330,21 +314,13 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
                     imagePath: "/images/icons/fire_fighter-white.svg",
                     description: "Assistante sociale"
                   },
-                  accessibilityOptions?.wheelchairAccessibleEntrance && {
+                  hospital.fields.wheelchair === 'yes' && {
                     imagePath: "/images/icons/wheelchair-white.svg",
-                    description: "Entrée accessible fauteuil roulant"
+                    description: "Accessible en fauteuil roulant"
                   },
-                  accessibilityOptions?.wheelchairAccessibleParking && {
+                  hospital.fields.wheelchair === 'limited' && {
                     imagePath: "/images/icons/wheelchair-white.svg",
-                    description: "Parking accessible fauteuil roulant"
-                  },
-                  accessibilityOptions?.wheelchairAccessibleRestroom && {
-                    imagePath: "/images/icons/wheelchair-white.svg",
-                    description: "Toilettes accessibles fauteuil roulant"
-                  },
-                  accessibilityOptions?.wheelchairAccessibleSeating && {
-                    imagePath: "/images/icons/wheelchair-white.svg",
-                    description: "Places assises accessibles"
+                    description: "Accessibilité fauteuil roulant partielle"
                   }
                 ].filter(Boolean) as { imagePath: string; description: string }[];
 
@@ -360,7 +336,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
                 ));
               })()}
               
-              {!mockData && !accessibilityOptions && (
+              {!mockData && !hospital.fields.wheelchair && (
                 <div className="col-span-full flex items-center justify-center">
                   <NotFoundData message="Les spécifications de cet établissement ne sont pas encore disponibles." />
                 </div>

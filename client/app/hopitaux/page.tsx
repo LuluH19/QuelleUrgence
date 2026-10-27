@@ -10,8 +10,25 @@ import ErrorMessage from '@/components/ErrorMessage';
 import AccessibilityBar from '@/components/AccessibilityBar';
 import { getHospitals } from '@/app/api/hospitals/route';
 import { sortByRecommendation } from '@/lib/recommendation';
-import type { Professionnal, PlaceDetails, MockHospitalData, HospitalWithMock } from '@/types/api';
+import type { Hospital, Professionnal, MockHospitalData, HospitalWithMock } from '@/types/api';
 export const dynamic = 'force-dynamic';
+
+async function enrichWithMock(hospitals: Hospital[]): Promise<HospitalWithMock[]> {
+  return Promise.all(
+    hospitals.map(async (hospital) => {
+      try {
+        const mockRes = await fetch(`/api/hospitals/mock/search?name=${encodeURIComponent(hospital.fields.name)}`);
+        if (mockRes.ok) {
+          const mockData: MockHospitalData = await mockRes.json();
+          return { ...hospital, mockData };
+        }
+      } catch (error) {
+        console.error(`Erreur pour ${hospital.fields.name}:`, error);
+      }
+      return hospital;
+    })
+  );
+}
 
 export default function HopitauxPage() {
   const [hospitals, setHospitals] = useState<HospitalWithMock[]>([]);
@@ -26,57 +43,31 @@ export default function HopitauxPage() {
       setLoading(true);
       setError(null);
 
+      const loadHospitals = async (latitude: number, longitude: number) => {
+        const nearbyHospitals = await getHospitals(latitude, longitude);
+        setHospitals(await enrichWithMock(nearbyHospitals));
+        setLoading(false);
+      };
+
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords;
-            const nearbyHospitals = await getHospitals(latitude, longitude);
-            const hospitalsWithMock = await Promise.all(
-              nearbyHospitals.map(async (hospital) => {
-                let result: HospitalWithMock = hospital;
-                try {
-                  const mockRes = await fetch(`/api/hospitals/mock/search?name=${encodeURIComponent(hospital.fields.name)}`);
-                  if (mockRes.ok) {
-                    const mockData: MockHospitalData = await mockRes.json();
-                    result = { ...result, mockData };
-                    
-                    if (mockData.place_id && mockData.place_id !== 'TODO_GOOGLE_PLACE_ID') {
-                      const accessRes = await fetch(`/api/hospitals/accessibility/${mockData.place_id}`);
-                      if (accessRes.ok) {
-                        const placeData: PlaceDetails = await accessRes.json();
-                        result = { 
-                          ...result, 
-                          placeAddress: placeData.formattedAddress,
-                          accessibilityOptions: placeData.accessibilityOptions,
-                        };
-                      }
-                    }
-                  }
-                } catch (error) {
-                  console.error(`Erreur pour ${hospital.fields.name}:`, error);
-                }
-                
-                return result;
-              })
-            );
-            
-            setHospitals(hospitalsWithMock);
-            setLoading(false);
+            await loadHospitals(latitude, longitude);
           },
           async (geoError) => {
             if (geoError.code === 1) {
               console.warn("🚫 Géolocalisation refusée - utilisation de Paris par défaut");
-              const parisHospitals = await getHospitals(48.8566, 2.3522);
-              setHospitals(parisHospitals);
-              setLoading(false);
-              return;
+            } else {
+              console.warn("Erreur de géolocalisation : ", geoError.message);
+              setError("Impossible d'obtenir votre position. Affichage des hôpitaux de Paris.");
             }
-
-            console.error("Erreur de géolocalisation : ", geoError);
-            setError("Impossible d'obtenir votre position. Affichage des hôpitaux de Paris.");
-            const parisHospitals = await getHospitals(48.8566, 2.3522);
-            setHospitals(parisHospitals);
-            setLoading(false);
+            await loadHospitals(48.8566, 2.3522);
+          },
+          {
+            timeout: 10000,
+            enableHighAccuracy: false,
+            maximumAge: 300000,
           }
         );
       } else {
@@ -91,10 +82,7 @@ export default function HopitauxPage() {
   const specificationOptions = [
     { value: 'fire_fighter', label: 'Accès pompiers' },
     { value: 'social_worker', label: 'Assistante sociale' },
-    { value: 'wheelchairAccessibleEntrance', label: 'Entrée accessible fauteuil roulant' },
-    { value: 'wheelchairAccessibleParking', label: 'Parking accessible fauteuil roulant' },
-    { value: 'wheelchairAccessibleRestroom', label: 'Toilettes accessibles fauteuil roulant' },
-    { value: 'wheelchairAccessibleSeating', label: 'Places assises accessibles' }
+    { value: 'wheelchair', label: 'Accessible en fauteuil roulant' }
   ];
 
   const specializationOptions = [
@@ -135,14 +123,8 @@ export default function HopitauxPage() {
               return hospital.mockData?.fire_fighter;
             case 'social_worker':
               return hospital.mockData?.social_worker;
-            case 'wheelchairAccessibleEntrance':
-              return hospital.accessibilityOptions?.wheelchairAccessibleEntrance;
-            case 'wheelchairAccessibleParking':
-              return hospital.accessibilityOptions?.wheelchairAccessibleParking;
-            case 'wheelchairAccessibleRestroom':
-              return hospital.accessibilityOptions?.wheelchairAccessibleRestroom;
-            case 'wheelchairAccessibleSeating':
-              return hospital.accessibilityOptions?.wheelchairAccessibleSeating;
+            case 'wheelchair':
+              return hospital.fields.wheelchair === 'yes';
             default:
               return false;
           }
@@ -179,7 +161,7 @@ export default function HopitauxPage() {
             onChange={setSearchQuery}
             className="mb-4"
           />
-           {!loading && !error && hospitals.length > 0 && (
+           {!loading && hospitals.length > 0 && (
             <div className="mb-6 relative z-30">
               <div className="flex items-center justify-start gap-3 py-2 flex-wrap">
                 <MultiSelectFilter
@@ -217,7 +199,7 @@ export default function HopitauxPage() {
                 Critères d&apos;affichage
               </h2>
               <p className="text-sm text-black leading-relaxed">
-                La liste est triée selon : <strong>distance</strong>, <strong>trafic</strong> (affluence), <strong>spécialités médicales</strong> et <strong>accessibilité</strong> (entrée, parking, toilettes, places assises). Le site <strong>recommandé</strong> est mis en évidence en premier avec un bandeau « Recommandé ».
+                La liste est triée selon : <strong>distance</strong>, <strong>trafic</strong> (affluence), <strong>spécialités médicales</strong> et <strong>accessibilité</strong> (fauteuil roulant). Le site <strong>recommandé</strong> est mis en évidence en premier avec un bandeau « Recommandé ».
               </p>
               <div className="mt-4 pt-4 border-t border-primary/30">
                 <AccessibilityBar />
@@ -228,7 +210,7 @@ export default function HopitauxPage() {
 
           {loading && <Loading message="Localisation en cours..." ariaLabel="Chargement des hôpitaux à proximité" />}
           {error && <ErrorMessage message={error} />}
-          {!loading && !error && (
+          {!loading && (!error || hospitals.length > 0) && (
             <HospitalList
               hospitals={sortedHospitals}
               recommendedRecordId={recommendedRecordId}

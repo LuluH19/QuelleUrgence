@@ -1,4 +1,4 @@
-import type { HospitalWithMock, AccessibilityOptions, Professionnal } from "@/types/api";
+import type { HospitalWithMock, Professionnal } from "@/types/api";
 
 /** Poids des critères dans le score de recommandation (somme = 100) */
 const WEIGHTS = {
@@ -47,17 +47,13 @@ function specialtyScore(
 }
 
 /**
- * Score accessibilité : nombre d’options d’accessibilité (entrée, parking, toilettes, sièges).
+ * Score accessibilité : tag OSM wheelchair (yes / limited / no).
  */
-function accessibilityScore(opts: AccessibilityOptions | undefined): number {
-  if (!opts) return 50;
-  const count = [
-    opts.wheelchairAccessibleEntrance,
-    opts.wheelchairAccessibleParking,
-    opts.wheelchairAccessibleRestroom,
-    opts.wheelchairAccessibleSeating,
-  ].filter(Boolean).length;
-  return count === 0 ? 30 : 30 + count * 17.5; // 30, 47.5, 65, 82.5, 100
+function accessibilityScore(wheelchair: string | undefined): number {
+  if (wheelchair === "yes") return 100;
+  if (wheelchair === "limited") return 65;
+  if (wheelchair === "no") return 30;
+  return 50; // neutre si pas de donnée
 }
 
 export interface RecommendationInput {
@@ -79,7 +75,7 @@ export function getRecommendationScore({
   const d = distanceScore(hospital.fields.dist);
   const t = trafficScore(trafficLevel);
   const s = specialtyScore(hospital.mockData?.professionnal, selectedSpecializations);
-  const a = accessibilityScore(hospital.accessibilityOptions);
+  const a = accessibilityScore(hospital.fields.wheelchair);
 
   return Math.round(
     (d * WEIGHTS.distance +
