@@ -8,16 +8,39 @@ import MultiSelectFilter from '@/components/MultiSelectFilter';
 import Loading from '@/components/Loading';
 import ErrorMessage from '@/components/ErrorMessage';
 import AccessibilityBar from '@/components/AccessibilityBar';
-import { getHospitals } from '@/app/api/hospitals/route';
-import { sortByRecommendation } from '@/lib/recommendation';
-import type { Professionnal, PlaceDetails, MockHospitalData, HospitalWithMock } from '@/types/api';
+import RecentHospitals from '@/components/RecentHospitals';
+import CognitiveCollapse from '@/components/cognitive/CognitiveCollapse';
+import CognitiveListLimiter from '@/components/cognitive/CognitiveListLimiter';
+import RecommendationCriteria from '@/components/hopitaux/RecommendationCriteria';
+import { getHospitals } from '@/lib/hospitals';
+import { useSearchQueryFromVoice } from '@/lib/voiceSearch';
+import { sortByRecommendation, getRecommendationReasons } from '@/lib/recommendation';
+import type { Hospital, Professionnal, MockHospitalData, HospitalWithMock } from '@/types/api';
 export const dynamic = 'force-dynamic';
+
+async function enrichWithMock(hospitals: Hospital[]): Promise<HospitalWithMock[]> {
+  return Promise.all(
+    hospitals.map(async (hospital) => {
+      try {
+        const mockRes = await fetch(`/api/hospitals/mock/search?name=${encodeURIComponent(hospital.fields.name)}`);
+        if (mockRes.ok) {
+          const mockData: MockHospitalData = await mockRes.json();
+          return { ...hospital, mockData };
+        }
+      } catch (error) {
+        console.error(`Erreur pour ${hospital.fields.name}:`, error);
+      }
+      return hospital;
+    })
+  );
+}
 
 export default function HopitauxPage() {
   const [hospitals, setHospitals] = useState<HospitalWithMock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  useSearchQueryFromVoice(setSearchQuery);
   const [selectedSpecifications, setSelectedSpecifications] = useState<string[]>([]);
   const [selectedSpecializations, setSelectedSpecializations] = useState<string[]>([]);
 
@@ -26,57 +49,31 @@ export default function HopitauxPage() {
       setLoading(true);
       setError(null);
 
+      const loadHospitals = async (latitude: number, longitude: number) => {
+        const nearbyHospitals = await getHospitals(latitude, longitude);
+        setHospitals(await enrichWithMock(nearbyHospitals));
+        setLoading(false);
+      };
+
       if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             const { latitude, longitude } = position.coords;
-            const nearbyHospitals = await getHospitals(latitude, longitude);
-            const hospitalsWithMock = await Promise.all(
-              nearbyHospitals.map(async (hospital) => {
-                let result: HospitalWithMock = hospital;
-                try {
-                  const mockRes = await fetch(`/api/hospitals/mock/search?name=${encodeURIComponent(hospital.fields.name)}`);
-                  if (mockRes.ok) {
-                    const mockData: MockHospitalData = await mockRes.json();
-                    result = { ...result, mockData };
-                    
-                    if (mockData.place_id && mockData.place_id !== 'TODO_GOOGLE_PLACE_ID') {
-                      const accessRes = await fetch(`/api/hospitals/accessibility/${mockData.place_id}`);
-                      if (accessRes.ok) {
-                        const placeData: PlaceDetails = await accessRes.json();
-                        result = { 
-                          ...result, 
-                          placeAddress: placeData.formattedAddress,
-                          accessibilityOptions: placeData.accessibilityOptions,
-                        };
-                      }
-                    }
-                  }
-                } catch (error) {
-                  console.error(`Erreur pour ${hospital.fields.name}:`, error);
-                }
-                
-                return result;
-              })
-            );
-            
-            setHospitals(hospitalsWithMock);
-            setLoading(false);
+            await loadHospitals(latitude, longitude);
           },
           async (geoError) => {
             if (geoError.code === 1) {
               console.warn("🚫 Géolocalisation refusée - utilisation de Paris par défaut");
-              const parisHospitals = await getHospitals(48.8566, 2.3522);
-              setHospitals(parisHospitals);
-              setLoading(false);
-              return;
+            } else {
+              console.warn("Erreur de géolocalisation : ", geoError.message);
+              setError("Impossible d'obtenir votre position. Affichage des hôpitaux de Paris.");
             }
-
-            console.error("Erreur de géolocalisation : ", geoError);
-            setError("Impossible d'obtenir votre position. Affichage des hôpitaux de Paris.");
-            const parisHospitals = await getHospitals(48.8566, 2.3522);
-            setHospitals(parisHospitals);
-            setLoading(false);
+            await loadHospitals(48.8566, 2.3522);
+          },
+          {
+            timeout: 10000,
+            enableHighAccuracy: false,
+            maximumAge: 300000,
           }
         );
       } else {
@@ -91,10 +88,7 @@ export default function HopitauxPage() {
   const specificationOptions = [
     { value: 'fire_fighter', label: 'Accès pompiers' },
     { value: 'social_worker', label: 'Assistante sociale' },
-    { value: 'wheelchairAccessibleEntrance', label: 'Entrée accessible fauteuil roulant' },
-    { value: 'wheelchairAccessibleParking', label: 'Parking accessible fauteuil roulant' },
-    { value: 'wheelchairAccessibleRestroom', label: 'Toilettes accessibles fauteuil roulant' },
-    { value: 'wheelchairAccessibleSeating', label: 'Places assises accessibles' }
+    { value: 'wheelchair', label: 'Accessible en fauteuil roulant' }
   ];
 
   const specializationOptions = [
@@ -135,14 +129,8 @@ export default function HopitauxPage() {
               return hospital.mockData?.fire_fighter;
             case 'social_worker':
               return hospital.mockData?.social_worker;
-            case 'wheelchairAccessibleEntrance':
-              return hospital.accessibilityOptions?.wheelchairAccessibleEntrance;
-            case 'wheelchairAccessibleParking':
-              return hospital.accessibilityOptions?.wheelchairAccessibleParking;
-            case 'wheelchairAccessibleRestroom':
-              return hospital.accessibilityOptions?.wheelchairAccessibleRestroom;
-            case 'wheelchairAccessibleSeating':
-              return hospital.accessibilityOptions?.wheelchairAccessibleSeating;
+            case 'wheelchair':
+              return hospital.fields.wheelchair === 'yes';
             default:
               return false;
           }
@@ -165,6 +153,16 @@ export default function HopitauxPage() {
     return sortByRecommendation(filteredHospitals, selectedSpecializations, null);
   }, [filteredHospitals, selectedSpecializations]);
 
+  const recommendedHospital = sortedHospitals[0] ?? null;
+  const recommendationReasons = useMemo(() => {
+    if (!recommendedHospital) return [];
+    return getRecommendationReasons({
+      hospital: recommendedHospital,
+      selectedSpecializations,
+      candidates: filteredHospitals,
+    });
+  }, [recommendedHospital, filteredHospitals, selectedSpecializations]);
+
   return (
     <>
       <Header />
@@ -173,13 +171,15 @@ export default function HopitauxPage() {
           <h1 className="sr-only text-2xl md:text-3xl font-bold text-primary mb-6 text-center">
             Hôpitaux avec services d&apos;urgence
           </h1>
+          <CognitiveCollapse label="Chercher ou filtrer les hôpitaux">
           <SearchBar
             placeholder="Rechercher un hôpital"
             value={searchQuery}
             onChange={setSearchQuery}
             className="mb-4"
           />
-           {!loading && !error && hospitals.length > 0 && (
+          <RecentHospitals className="mb-6" />
+           {!loading && hospitals.length > 0 && (
             <div className="mb-6 relative z-30">
               <div className="flex items-center justify-start gap-3 py-2 flex-wrap">
                 <MultiSelectFilter
@@ -196,43 +196,34 @@ export default function HopitauxPage() {
                 />
               </div>
               
-              <div className="text-center text-sm text-black mt-4">
+              <div className="text-center text-sm text-black mt-4" role="status">
                 {filteredHospitals.length} {filteredHospitals.length > 1 ? 'hôpitaux trouvés' : 'hôpital trouvé'}
+                {recommendedHospital && (
+                  <>
+                    {'. '}Site recommandé : <strong>{recommendedHospital.fields.name}</strong>
+                  </>
+                )}
               </div>
             </div>
           )}
 
-          {/* En gros c'est un texte qui permet d'affiché un texte qui explique de pourquoi Le site recommandé est mis 
-          en évidence visuellement et textuellement. C'est pour ça que je le laisse en commentaire pour l'instant, mais 
-          je pense que c'est important de le remettre à terme, peut-être en l'intégrant dans une section "Comment ça marche ?" 
-          ou "Pourquoi ce classement ?"
-           */}
-          {
-          /* {!loading && !error && sortedHospitals.length > 0 && (
-            <section
-              className="mb-6 p-4 bg-white/80 rounded-xl border-2 border-primary text-left"
-              aria-labelledby="critères-affichage"
-            >
-              <h2 id="critères-affichage" className="text-base font-bold text-primary mb-2">
-                Critères d&apos;affichage
-              </h2>
-              <p className="text-sm text-black leading-relaxed">
-                La liste est triée selon : <strong>distance</strong>, <strong>trafic</strong> (affluence), <strong>spécialités médicales</strong> et <strong>accessibilité</strong> (entrée, parking, toilettes, places assises). Le site <strong>recommandé</strong> est mis en évidence en premier avec un bandeau « Recommandé ».
-              </p>
-              <div className="mt-4 pt-4 border-t border-primary/30">
-                <AccessibilityBar />
-              </div>
-            </section>
-          )} */
-          }
+          {!loading && sortedHospitals.length > 0 && (
+            <RecommendationCriteria>
+              <AccessibilityBar />
+            </RecommendationCriteria>
+          )}
+          </CognitiveCollapse>
 
           {loading && <Loading message="Localisation en cours..." ariaLabel="Chargement des hôpitaux à proximité" />}
           {error && <ErrorMessage message={error} />}
-          {!loading && !error && (
+          {!loading && (!error || hospitals.length > 0) && (
+            <CognitiveListLimiter count={sortedHospitals.length}>
             <HospitalList
               hospitals={sortedHospitals}
               recommendedRecordId={recommendedRecordId}
+              recommendationReasons={recommendationReasons}
             />
+            </CognitiveListLimiter>
           )}
         </div>
       </main>

@@ -1,14 +1,19 @@
 import Link from "next/link";
 import Image from "next/image";
 import { HospitalWithMock } from "@/types/api";
+import { formatKm } from "@/lib/recommendation";
 
 interface HospitalCardProps {
   hospital: HospitalWithMock;
   isRecommended?: boolean;
+  /** Motifs de la recommandation, affichés en clair sous le nom du site recommandé */
+  recommendationReasons?: string[];
 }
 
-function HospitalCard({ hospital, isRecommended = false }: HospitalCardProps) {
-    const distance = hospital.fields.dist ? (hospital.fields.dist / 1000).toFixed(1) : null;
+function HospitalCard({ hospital, isRecommended = false, recommendationReasons = [] }: HospitalCardProps) {
+    const distance = hospital.fields.dist ? formatKm(hospital.fields.dist) : null;
+    const reasonsId = `reco-raisons-${hospital.recordid}`;
+    const showReasons = isRecommended && recommendationReasons.length > 0;
     const cardLabel = isRecommended
       ? `Recommandé : ${hospital.fields.name}. Hôpital avec services d'urgence.`
       : `${hospital.fields.name}. Hôpital avec services d'urgence.`;
@@ -20,7 +25,6 @@ function HospitalCard({ hospital, isRecommended = false }: HospitalCardProps) {
                 ? "bg-primary border-2 border-amber-400 ring-2 ring-amber-400/50"
                 : "bg-primary"
             }`}
-            role="listitem"
             aria-label={cardLabel}
         >
             {isRecommended && (
@@ -31,9 +35,6 @@ function HospitalCard({ hospital, isRecommended = false }: HospitalCardProps) {
                         <span aria-hidden="true">★</span>
                         Recommandé
                     </span>
-                    <span className="sr-only">
-                        Ce site est recommandé selon la distance, le trafic, les spécialités et l&apos;accessibilité.
-                    </span>
                 </div>
             )}
             <div className="flex items-start justify-between gap-3 mb-3">
@@ -41,20 +42,30 @@ function HospitalCard({ hospital, isRecommended = false }: HospitalCardProps) {
                     <Link
                         href={`/hopitaux/${hospital.recordid}`}
                         className="focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-primary rounded"
-                        aria-label={`Voir les détails de ${hospital.fields.name}${isRecommended ? ", site recommandé" : ""}`}
+                        aria-label={`${hospital.fields.name}${isRecommended ? ", site recommandé" : ""} : voir les détails`}
+                        aria-describedby={showReasons ? reasonsId : undefined}
                     >
                         {hospital.fields.name}
                     </Link>
                 </h2>
                 {distance && (
-                    <span
-                        className="flex-shrink-0 font-bold py-2 px-4 rounded-full text-black bg-white text-sm"
-                        aria-label={`Distance : ${distance} kilomètres`}
-                    >
-                        {distance} km
+                    <span className="flex-shrink-0 font-bold py-2 px-4 rounded-full text-black bg-white text-sm">
+                        <span aria-hidden="true">{distance} km</span>
+                        <span className="sr-only">Distance : {distance} kilomètres</span>
                     </span>
                 )}
             </div>
+
+            {showReasons && (
+                <div id={reasonsId} className="mb-3 rounded-md bg-white p-3 text-black">
+                    <p className="font-bold text-sm">Pourquoi ce site est recommandé :</p>
+                    <ul className="mt-1 list-disc pl-5 text-sm leading-relaxed">
+                        {recommendationReasons.map((reason) => (
+                            <li key={reason}>{reason}</li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             {hospital.fields.phone && (
                 <Link

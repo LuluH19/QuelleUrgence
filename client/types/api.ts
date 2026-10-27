@@ -8,6 +8,8 @@ interface HospitalFields {
     }
     lat?: number
     lon?: number
+    /** Tag OSM wheelchair : 'yes' | 'limited' | 'no' */
+    wheelchair?: string
     [key: string]: any
 }
 
@@ -48,22 +50,8 @@ interface MockData {
     hospitals: MockHospitalData[];
 }
 
-interface AccessibilityOptions {
-    wheelchairAccessibleParking?: boolean;
-    wheelchairAccessibleEntrance?: boolean;
-    wheelchairAccessibleRestroom?: boolean;
-    wheelchairAccessibleSeating?: boolean;
-}
-
-interface PlaceDetails {
-    formattedAddress?: string;
-    accessibilityOptions?: AccessibilityOptions;
-}
-
 interface HospitalWithMock extends Hospital {
     mockData?: MockHospitalData;
-    placeAddress?: string;
-    accessibilityOptions?: AccessibilityOptions;
 }
 
 interface AphService {
@@ -72,4 +60,4 @@ interface AphService {
     isPediatric: boolean;
 }
 
-export type { Hospital, Professionnal, AccessibilityOptions, PlaceDetails, MockData, MockHospitalData, HospitalWithMock, AphService };
+export type { Hospital, Professionnal, MockData, MockHospitalData, HospitalWithMock, AphService };

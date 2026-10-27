@@ -11,7 +11,11 @@ import MapWrapper from '@/components/MapWrapper';
 import Attendance from '@/components/Attendance';
 import Specification from '@/components/Specification';
 import NotFoundData from '@/components/NotFoundData';
-import type { Hospital, AccessibilityOptions, PlaceDetails, MockHospitalData, AphService } from '@/types/api';
+import type { Hospital, MockHospitalData, AphService } from '@/types/api';
+import { getAphpServices } from '@/lib/aphp';
+import CognitiveCollapse from '@/components/cognitive/CognitiveCollapse';
+import CognitiveHospitalActions from '@/components/cognitive/CognitiveHospitalActions';
+import { addToHistory } from '@/lib/history';
 
 export default function HospitalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [hospital, setHospital] = useState<Hospital | null>(null);
@@ -22,8 +26,6 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
   const [matchingServices, setMatchingServices] = useState<AphService[]>([]);
   const [selectedCode, setSelectedCode] = useState<string | null>(null);
   const [mockData, setMockData] = useState<MockHospitalData | null>(null);
-  const [accessibilityOptions, setAccessibilityOptions] = useState<AccessibilityOptions | null>(null);
-  const [placeAddress, setPlaceAddress] = useState<string | null>(null);
   const [specificationsLoading, setspecificationsLoading] = useState(true);
   const router = useRouter();
 
@@ -72,15 +74,17 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
     fetchHospital();
   }, [hospitalId]);
 
+  // Enregistrer la consultation dans l'historique local (US14)
+  useEffect(() => {
+    if (!hospital) return;
+    addToHistory({ id: hospital.recordid, name: hospital.fields.name, phone: hospital.fields.phone });
+  }, [hospital]);
+
   // Récupérer les services APHP
   useEffect(() => {
     async function fetchAphpServices() {
       try {
-        const res = await fetch('/api/hospitals');
-        if (res.ok) {
-          const data = await res.json();
-          setAphServices(data);
-        }
+        setAphServices(await getAphpServices());
       } catch (error) {
         console.error('Erreur lors de la récupération des services AP-HP:', error);
       }
@@ -116,14 +120,6 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
         if (mockRes.ok) {
           const mockHospital: MockHospitalData = await mockRes.json();
           setMockData(mockHospital);
-          if (mockHospital.place_id && mockHospital.place_id !== 'TODO_GOOGLE_PLACE_ID') {
-            const accessRes = await fetch(`/api/hospitals/accessibility/${mockHospital.place_id}`);
-            if (accessRes.ok) {
-              const placeData: PlaceDetails = await accessRes.json();
-              setPlaceAddress(placeData.formattedAddress || null);
-              setAccessibilityOptions(placeData.accessibilityOptions ?? null);
-            }
-          }
         }
       } catch (error) {
         console.error('Erreur lors de la récupération des caractéristiques:', error);
@@ -196,8 +192,8 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
     <>
       <Header />
       <main id="main-content" className="bg-white" tabIndex={-1}>
-        <section className="relative shadow-[0_4px_4px_rgba(0,0,0,0.25)]" aria-label="En-tête de la page">
-          <div className="absolute top-0 left-0 w-full h-full">
+        <section className="relative shadow-[0_4px_4px_rgba(0,0,0,0.25)]" aria-label="En-tête de la page" data-cognitive-hero="">
+          <div className="absolute top-0 left-0 w-full h-full" data-cognitive="hide">
             <Image 
               src="/images/home/hero-banner.webp" 
               alt="Vue d'un service d'urgences hospitalier moderne et accueillant" 
@@ -226,20 +222,21 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </section>
 
+        <CognitiveHospitalActions
+          name={hospital.fields.name}
+          phone={hospital.fields.phone}
+          center={hospitalCenter}
+        />
+
         <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="map-heading">
           <h2 id="map-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Localisation</h2>
+          <CognitiveCollapse label="Voir la carte" unmountWhenClosed className="w-full" contentClassName="w-full flex flex-col gap-4 items-center">
           <MapWrapper
             initialCenter={hospitalCenter ?? undefined}
             initialZoom={16}
             focusRecordId={hospital.recordid}
           />
           <div className="w-full max-w-4xl flex flex-col items-center justify-center gap-2">
-            {placeAddress && (
-              <div className="flex items-center justify-center gap-2 text-black">
-                <p className="text-sm md:text-base lg:text-lg text-center font-bold">Adresse : {placeAddress}</p>
-              </div>
-            )}
-            
             {hospital.fields.phone && (
               <Link 
                 href={`tel:${hospital.fields.phone}`} 
@@ -265,6 +262,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           >
             Accéder à la carte
           </button>
+          </CognitiveCollapse>
         </section>
 
         <section className='py-6 px-4 flex flex-col gap-4 items-center' aria-labelledby="affluence-heading">
@@ -313,6 +311,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
           )}
         </section>
 
+        <CognitiveCollapse label="Plus d'informations sur l'hôpital" buttonWrapperClassName="px-4 pb-6">
         <section className='py-6 px-4 flex flex-col gap-4' aria-labelledby="characteristics-heading">
           <h2 id="characteristics-heading" className='text-lg md:text-xl lg:text-2xl font-bold text-left w-full'>Spécifications</h2>
           
@@ -330,21 +329,13 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
                     imagePath: "/images/icons/fire_fighter-white.svg",
                     description: "Assistante sociale"
                   },
-                  accessibilityOptions?.wheelchairAccessibleEntrance && {
+                  hospital.fields.wheelchair === 'yes' && {
                     imagePath: "/images/icons/wheelchair-white.svg",
-                    description: "Entrée accessible fauteuil roulant"
+                    description: "Accessible en fauteuil roulant"
                   },
-                  accessibilityOptions?.wheelchairAccessibleParking && {
+                  hospital.fields.wheelchair === 'limited' && {
                     imagePath: "/images/icons/wheelchair-white.svg",
-                    description: "Parking accessible fauteuil roulant"
-                  },
-                  accessibilityOptions?.wheelchairAccessibleRestroom && {
-                    imagePath: "/images/icons/wheelchair-white.svg",
-                    description: "Toilettes accessibles fauteuil roulant"
-                  },
-                  accessibilityOptions?.wheelchairAccessibleSeating && {
-                    imagePath: "/images/icons/wheelchair-white.svg",
-                    description: "Places assises accessibles"
+                    description: "Accessibilité fauteuil roulant partielle"
                   }
                 ].filter(Boolean) as { imagePath: string; description: string }[];
 
@@ -360,7 +351,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
                 ));
               })()}
               
-              {!mockData && !accessibilityOptions && (
+              {!mockData && !hospital.fields.wheelchair && (
                 <div className="col-span-full flex items-center justify-center">
                   <NotFoundData message="Les spécifications de cet établissement ne sont pas encore disponibles." />
                 </div>
@@ -462,6 +453,7 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
             )}
           </section>
         )}
+        </CognitiveCollapse>
       </main>
     </>
   );

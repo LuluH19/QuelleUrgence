@@ -524,8 +524,6 @@ function MapContent({ fullScreen = false, initialCenter, initialZoom, focusRecor
             updatePopups()
           },
           async (error) => {
-            logError('❌ MapComponent - Erreur:', error.code, error.message)
-
             if (error.code === 1) {
               console.warn("🚫 Géolocalisation refusée par l'utilisateur")
             } else if (error.code === 2) {
@@ -549,6 +547,7 @@ function MapContent({ fullScreen = false, initialCenter, initialZoom, focusRecor
           {
             timeout: 10000,
             enableHighAccuracy: false,
+            maximumAge: 300000,
           }
         )
       } else {

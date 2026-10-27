@@ -1,0 +1,134 @@
+// Mode "urgence cognitive" (US13) : interface simplifiée.
+// Activé par l'attribut data-cognitive-mode="on" sur <html> (voir lib/cognitiveMode.ts).
+// Repères : FALC (Facile à lire et à comprendre) et WCAG COGA
+// (Making Content Usable for People with Cognitive and Learning Disabilities).
+
+$cognitive-on: 'html[data-cognitive-mode="on"]';
+$cognitive-off: 'html:not([data-cognitive-mode="on"])';
+
+// Éléments réservés au mode simple : masqués hors mode.
+#{$cognitive-off} [data-cognitive="only"] {
+  display: none !important;
+}
+
+#{$cognitive-on} {
+  // Texte un peu plus grand (cumulable avec le réglage de taille du texte).
+  font-size: calc(112.5% * var(--text-scale, 1));
+
+  // Éléments secondaires masqués.
+  [data-cognitive="hide"] {
+    display: none !important;
+  }
+
+  // Contenus repliés derrière un bouton "Voir...".
+  [data-cognitive-collapse="closed"] > [data-cognitive-collapse-content] {
+    display: none !important;
+  }
+
+  // Liste d'hôpitaux : seul le premier (recommandé) est visible tant que la liste est repliée.
+  [data-cognitive-list="collapsed"] > [role="list"] > :not(:first-child) {
+    display: none !important;
+  }
+
+  // En-têtes avec photo : fond uni, sans image, plus compact.
+  [data-cognitive-hero] {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 0 1.5rem;
+    background-color: #340788;
+    box-shadow: none;
+
+    > a {
+      position: static;
+      margin: 0 1rem;
+    }
+
+    [class*="min-h-"] {
+      min-height: 0 !important;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      line-height: 1.3;
+    }
+  }
+
+  // Fond calme et uni.
+  main {
+    background-image: none !important;
+    background-color: #fff;
+    word-spacing: 0.08em;
+  }
+
+  // Lecture : interlignage et longueur de ligne confortables.
+  main p,
+  main li,
+  main summary {
+    line-height: 1.6;
+  }
+
+  main p {
+    max-width: 70ch;
+  }
+
+  main h1,
+  main h2,
+  main h3 {
+    line-height: 1.3;
+  }
+
+  // Espacement accru entre les blocs.
+  main section {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+  }
+
+  // Cibles plus grandes (au moins 48 px).
+  main button,
+  main summary,
+  main select,
+  main input:not([type="checkbox"]):not([type="radio"]) {
+    min-height: 3rem;
+  }
+
+  main input[type="checkbox"],
+  main input[type="radio"] {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  // Focus très visible.
+  :focus-visible {
+    outline: 4px solid #dc2626 !important;
+    outline-offset: 3px;
+  }
+
+  // Action principale de l'écran : bien visible.
+  .cognitive-main-action {
+    box-shadow: 0 0 0 4px #fff, 0 0 0 7px #000;
+  }
+
+  // Animations réduites : ni mouvement ni effet de zoom au survol.
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [class*="hover:scale"]:hover,
+  .scale-105,
+  .scale-110 {
+    --tw-scale-x: 1 !important;
+    --tw-scale-y: 1 !important;
+  }
+
+  // Pas d'ombres décoratives sur les cartes.
+  main article {
+    box-shadow: none !important;
+  }
+}

@@ -48,7 +48,7 @@ export default function AccessibilityBar() {
         A−
       </button>
       <span className="text-sm font-medium text-black" aria-live="polite">
-        Taille du texte
+        Taille du texte : {Math.round(scale * 100)} %
       </span>
       <button
         type="button"
