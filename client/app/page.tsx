@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link';
 import Header from '@/components/Header'
 import FAQSection from '@/components/home/FAQSection'
+import RecentHospitals from '@/components/RecentHospitals'
 
 export default function Home() {
   return (
@@ -39,6 +40,7 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <RecentHospitals className="mx-4 mt-6" />
       <section id="main-content" className="pt-6 px-4 flex flex-col gap-4 items-center" aria-labelledby="about-heading">
         <h2 id="about-heading" className="text-lg md:text-xl lg:text-2xl font-bold text-left w-full">Qu&apos;est-ce que Quelles Urgences ?</h2>
         <div className="text-sm md:text-base lg:text-lg text-left flex flex-col gap-4 w-full">

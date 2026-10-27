@@ -12,6 +12,8 @@ import Attendance from '@/components/Attendance';
 import Specification from '@/components/Specification';
 import NotFoundData from '@/components/NotFoundData';
 import type { Hospital, MockHospitalData, AphService } from '@/types/api';
+import { getAphpServices } from '@/lib/aphp';
+import { addToHistory } from '@/lib/history';
 
 export default function HospitalDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const [hospital, setHospital] = useState<Hospital | null>(null);
@@ -70,15 +72,17 @@ export default function HospitalDetailPage({ params }: { params: Promise<{ id: s
     fetchHospital();
   }, [hospitalId]);
 
+  // Enregistrer la consultation dans l'historique local (US14)
+  useEffect(() => {
+    if (!hospital) return;
+    addToHistory({ id: hospital.recordid, name: hospital.fields.name, phone: hospital.fields.phone });
+  }, [hospital]);
+
   // Récupérer les services APHP
   useEffect(() => {
     async function fetchAphpServices() {
       try {
-        const res = await fetch('/api/hospitals');
-        if (res.ok) {
-          const data = await res.json();
-          setAphServices(data);
-        }
+        setAphServices(await getAphpServices());
       } catch (error) {
         console.error('Erreur lors de la récupération des services AP-HP:', error);
       }

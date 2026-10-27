@@ -1,6 +1,7 @@
 import './globals.scss'
 import { Metadata } from 'next';
 import TextScaleInit from '@/components/TextScaleInit';
+import Footer from '@/components/Footer';
 export const metadata: Metadata = {
   title: {
     default: 'Quelles Urgences',
@@ -31,6 +32,7 @@ export default function RootLayout({
           Aller au contenu principal
         </a>
         {children}
+        <Footer />
       </body>
     </html>
   )

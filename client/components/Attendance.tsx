@@ -2,25 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type AttendanceData from '@/types/attendance';
-
-async function getAttendance(hospitalCode: string): Promise<AttendanceData[] | null> {
-  const apiUrl = `/api/attendance/${hospitalCode}`; 
-  
-  try {
-    const res = await fetch(apiUrl);
-
-    if (!res.ok) {
-      console.error(`Erreur API d'affluence: ${res.status} ${res.statusText}`);
-      return null;
-    }
-
-    const data = await res.json();
-    return data as AttendanceData[];
-  } catch (error) {
-    console.error("Échec de la récupération des données d'affluence", error);
-    return null;
-  }
-}
+import { getAttendance } from '@/lib/aphp';
 
 function formatMinutes(minutes: number | null): string {
   if (minutes === null) {

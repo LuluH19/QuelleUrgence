@@ -5,9 +5,11 @@ import NotFoundData from "@/components/NotFoundData";
 interface HospitalListProps {
   hospitals: HospitalWithMock[];
   recommendedRecordId?: string | null;
+  /** Motifs affichés sur la carte du site recommandé */
+  recommendationReasons?: string[];
 }
 
-function HospitalList({ hospitals, recommendedRecordId = null }: HospitalListProps) {
+function HospitalList({ hospitals, recommendedRecordId = null, recommendationReasons = [] }: HospitalListProps) {
     if (hospitals.length === 0) {
         return (
           <NotFoundData message="Aucun hôpital trouvé à proximité." />
@@ -21,6 +23,7 @@ function HospitalList({ hospitals, recommendedRecordId = null }: HospitalListPro
                   key={hospital.recordid}
                   hospital={hospital}
                   isRecommended={hospital.recordid === recommendedRecordId}
+                  recommendationReasons={hospital.recordid === recommendedRecordId ? recommendationReasons : undefined}
                 />
             ))}
         </div>

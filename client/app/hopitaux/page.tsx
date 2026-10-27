@@ -8,8 +8,10 @@ import MultiSelectFilter from '@/components/MultiSelectFilter';
 import Loading from '@/components/Loading';
 import ErrorMessage from '@/components/ErrorMessage';
 import AccessibilityBar from '@/components/AccessibilityBar';
-import { getHospitals } from '@/app/api/hospitals/route';
-import { sortByRecommendation } from '@/lib/recommendation';
+import RecentHospitals from '@/components/RecentHospitals';
+import RecommendationCriteria from '@/components/hopitaux/RecommendationCriteria';
+import { getHospitals } from '@/lib/hospitals';
+import { sortByRecommendation, getRecommendationReasons } from '@/lib/recommendation';
 import type { Hospital, Professionnal, MockHospitalData, HospitalWithMock } from '@/types/api';
 export const dynamic = 'force-dynamic';
 
@@ -147,6 +149,16 @@ export default function HopitauxPage() {
     return sortByRecommendation(filteredHospitals, selectedSpecializations, null);
   }, [filteredHospitals, selectedSpecializations]);
 
+  const recommendedHospital = sortedHospitals[0] ?? null;
+  const recommendationReasons = useMemo(() => {
+    if (!recommendedHospital) return [];
+    return getRecommendationReasons({
+      hospital: recommendedHospital,
+      selectedSpecializations,
+      candidates: filteredHospitals,
+    });
+  }, [recommendedHospital, filteredHospitals, selectedSpecializations]);
+
   return (
     <>
       <Header />
@@ -161,6 +173,7 @@ export default function HopitauxPage() {
             onChange={setSearchQuery}
             className="mb-4"
           />
+          <RecentHospitals className="mb-6" />
            {!loading && hospitals.length > 0 && (
             <div className="mb-6 relative z-30">
               <div className="flex items-center justify-start gap-3 py-2 flex-wrap">
@@ -178,35 +191,22 @@ export default function HopitauxPage() {
                 />
               </div>
               
-              <div className="text-center text-sm text-black mt-4">
+              <div className="text-center text-sm text-black mt-4" role="status">
                 {filteredHospitals.length} {filteredHospitals.length > 1 ? 'hôpitaux trouvés' : 'hôpital trouvé'}
+                {recommendedHospital && (
+                  <>
+                    {'. '}Site recommandé : <strong>{recommendedHospital.fields.name}</strong>
+                  </>
+                )}
               </div>
             </div>
           )}
 
-          {/* En gros c'est un texte qui permet d'affiché un texte qui explique de pourquoi Le site recommandé est mis 
-          en évidence visuellement et textuellement. C'est pour ça que je le laisse en commentaire pour l'instant, mais 
-          je pense que c'est important de le remettre à terme, peut-être en l'intégrant dans une section "Comment ça marche ?" 
-          ou "Pourquoi ce classement ?"
-           */}
-          {
-          /* {!loading && !error && sortedHospitals.length > 0 && (
-            <section
-              className="mb-6 p-4 bg-white/80 rounded-xl border-2 border-primary text-left"
-              aria-labelledby="critères-affichage"
-            >
-              <h2 id="critères-affichage" className="text-base font-bold text-primary mb-2">
-                Critères d&apos;affichage
-              </h2>
-              <p className="text-sm text-black leading-relaxed">
-                La liste est triée selon : <strong>distance</strong>, <strong>trafic</strong> (affluence), <strong>spécialités médicales</strong> et <strong>accessibilité</strong> (fauteuil roulant). Le site <strong>recommandé</strong> est mis en évidence en premier avec un bandeau « Recommandé ».
-              </p>
-              <div className="mt-4 pt-4 border-t border-primary/30">
-                <AccessibilityBar />
-              </div>
-            </section>
-          )} */
-          }
+          {!loading && sortedHospitals.length > 0 && (
+            <RecommendationCriteria>
+              <AccessibilityBar />
+            </RecommendationCriteria>
+          )}
 
           {loading && <Loading message="Localisation en cours..." ariaLabel="Chargement des hôpitaux à proximité" />}
           {error && <ErrorMessage message={error} />}
@@ -214,6 +214,7 @@ export default function HopitauxPage() {
             <HospitalList
               hospitals={sortedHospitals}
               recommendedRecordId={recommendedRecordId}
+              recommendationReasons={recommendationReasons}
             />
           )}
         </div>
